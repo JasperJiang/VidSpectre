@@ -22,4 +22,4 @@ VOLUME ["/app/storage"]
 EXPOSE 5002
 
 # 使用 gunicorn 运行 (--preload 避免多 worker 竞态)
-CMD ["uv", "run", "gunicorn", "-w", "4", "--preload", "-b", "0.0.0.0:5002", "run:app"]
+CMD ["/app/.venv/bin/gunicorn", "-w", "4", "--preload", "-b", "0.0.0.0:5002", "run:app"]
