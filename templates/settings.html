@@ -3,6 +3,9 @@
 {% block title %}设置 - VidSpectre{% endblock %}
 
 {% block content %}
+<!-- Toast 容器 -->
+<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+
 <div class="max-w-xl mx-auto">
     <div class="bg-gray-800 rounded-lg border border-gray-700">
         <div class="px-6 py-4 border-b border-gray-700">
@@ -62,7 +65,40 @@
 {% endblock %}
 
 {% block scripts %}
+<style>
+.toast {
+    padding: 12px 20px;
+    border-radius: 8px;
+    color: white;
+    font-medium: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    animation: slideIn 0.3s ease;
+}
+.toast-success { background: #059669; }
+.toast-error { background: #dc2626; }
+.toast-info { background: #2563eb; }
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+</style>
 <script>
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
+
 document.getElementById('preset-select').addEventListener('change', function() {
     if (this.value && this.value !== 'custom') {
         document.querySelector('input[name="default_cron"]').value = this.value;
@@ -82,7 +118,7 @@ document.getElementById('trigger-fetch-btn').addEventListener('click', function(
             }
         })
         .catch(err => {
-            alert('触发失败');
+            showToast('触发失败', 'error');
             btn.disabled = false;
             btn.textContent = '手动触发';
         });
@@ -100,12 +136,13 @@ function pollTaskStatus(taskId) {
                     btn.textContent = '完成';
                     const success = data.completed;
                     const failed = data.failed;
-                    alert('完成！成功: ' + success + '，失败: ' + failed);
+                    showToast('完成！成功: ' + success + '，失败: ' + failed, 'success');
                     setTimeout(function() { btn.textContent = '手动触发'; }, 2000);
                 } else if (data.status === 'failed') {
                     clearInterval(interval);
                     btn.disabled = false;
                     btn.textContent = '失败';
+                    showToast('爬取失败', 'error');
                     setTimeout(function() { btn.textContent = '手动触发'; }, 2000);
                 } else {
                     btn.textContent = '爬取中 ' + data.completed + '/' + data.total;
@@ -115,6 +152,7 @@ function pollTaskStatus(taskId) {
                 clearInterval(interval);
                 btn.disabled = false;
                 btn.textContent = '失败';
+                showToast('获取状态失败', 'error');
             });
     }, 1000);
 }
