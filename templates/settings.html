@@ -33,10 +33,22 @@
                     </p>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">失败重试次数</label>
+                    <input type="number" name="fetch_retry_count"
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                           value="{{ fetch_retry_count }}" min="0" max="10">
+                    <p class="text-xs text-gray-500 mt-1">网络错误时的重试次数，设为 0 则不重试</p>
+                </div>
+
                 <div class="flex gap-3 pt-4">
                     <button type="submit"
                             class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
                         保存
+                    </button>
+                    <button type="button" id="trigger-fetch-btn"
+                            class="flex-1 bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium">
+                        手动触发
                     </button>
                     <a href="{{ url_for('web.index') }}"
                        class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium text-center">
@@ -56,5 +68,55 @@ document.getElementById('preset-select').addEventListener('change', function() {
         document.querySelector('input[name="default_cron"]').value = this.value;
     }
 });
+
+document.getElementById('trigger-fetch-btn').addEventListener('click', function() {
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = '触发中...';
+
+    fetch('/api/fetch-all', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.task_id) {
+                pollTaskStatus(data.task_id);
+            }
+        })
+        .catch(err => {
+            alert('触发失败');
+            btn.disabled = false;
+            btn.textContent = '手动触发';
+        });
+});
+
+function pollTaskStatus(taskId) {
+    const btn = document.getElementById('trigger-fetch-btn');
+    const interval = setInterval(function() {
+        fetch('/api/fetch-all/' + taskId)
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'completed') {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    btn.textContent = '完成';
+                    const success = data.completed;
+                    const failed = data.failed;
+                    alert('完成！成功: ' + success + '，失败: ' + failed);
+                    setTimeout(function() { btn.textContent = '手动触发'; }, 2000);
+                } else if (data.status === 'failed') {
+                    clearInterval(interval);
+                    btn.disabled = false;
+                    btn.textContent = '失败';
+                    setTimeout(function() { btn.textContent = '手动触发'; }, 2000);
+                } else {
+                    btn.textContent = '爬取中 ' + data.completed + '/' + data.total;
+                }
+            })
+            .catch(err => {
+                clearInterval(interval);
+                btn.disabled = false;
+                btn.textContent = '失败';
+            });
+    }, 1000);
+}
 </script>
 {% endblock %}

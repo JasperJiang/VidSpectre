@@ -70,6 +70,8 @@ def settings():
     """全局设置页面"""
     if request.method == "POST":
         default_cron = request.form.get("default_cron")
+        fetch_retry_count = request.form.get("fetch_retry_count", "3")
+
         # 保存到数据库
         setting = Setting.query.get("default_interval_cron")
         if setting:
@@ -77,9 +79,24 @@ def settings():
         else:
             setting = Setting(key="default_interval_cron", value=default_cron)
             db.session.add(setting)
+
+        retry_setting = Setting.query.get("fetch_retry_count")
+        if retry_setting:
+            retry_setting.value = fetch_retry_count
+        else:
+            retry_setting = Setting(key="fetch_retry_count", value=fetch_retry_count)
+            db.session.add(retry_setting)
+
         db.session.commit()
-        # 同时更新内存中的值
+        # 更新内存中的值
         Config.DEFAULT_INTERVAL_CRON = default_cron
+        Config.FETCH_RETRY_COUNT = int(fetch_retry_count)
         return redirect(url_for("web.settings"))
 
-    return render_template("settings.html", default_cron=Config.DEFAULT_INTERVAL_CRON)
+    # 获取 fetch_retry_count
+    retry_setting = Setting.query.get("fetch_retry_count")
+    fetch_retry_count = retry_setting.value if retry_setting else str(Config.FETCH_RETRY_COUNT)
+
+    return render_template("settings.html",
+                           default_cron=Config.DEFAULT_INTERVAL_CRON,
+                           fetch_retry_count=fetch_retry_count)
