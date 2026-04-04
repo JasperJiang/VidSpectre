@@ -3,32 +3,42 @@
 {% block title %}编辑订阅 - VidSpectre{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card">
-            <div class="card-header">
-                <h4>编辑订阅</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST">
-                    <div class="mb-3">
-                        <label class="form-label">名称</label>
-                        <input type="text" class="form-control" value="{{ subscription.media_name }}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">类型</label>
-                        <input type="text" class="form-control" value="{{ '电影' if subscription.media_type == 'movie' else '电视剧' }}" readonly>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">当前看到</label>
-                        <input type="text" name="current_episode" class="form-control" value="{{ subscription.current_episode or '' }}" placeholder="例如：第10集">
-                    </div>
-                    <div class="d-grid gap-2">
-                        <button type="submit" class="btn btn-primary">保存</button>
-                        <a href="{{ url_for('web.index') }}" class="btn btn-secondary">取消</a>
-                    </div>
-                </form>
-            </div>
+<div class="max-w-2xl mx-auto">
+    <div class="bg-gray-800 rounded-lg border border-gray-700">
+        <div class="px-6 py-4 border-b border-gray-700">
+            <h2 class="text-xl font-bold">编辑订阅</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">名称</label>
+                    <input type="text" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-500" value="{{ subscription.media_name }}" readonly>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">类型</label>
+                    <input type="text" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-gray-500" value="{{ '电影' if subscription.media_type == 'movie' else '电视剧' }}" readonly>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-300 mb-1">当前看到</label>
+                    <input type="text" name="current_episode"
+                           class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                           value="{{ subscription.current_episode or '' }}"
+                           placeholder="例如：第10集">
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button type="submit"
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium">
+                        保存
+                    </button>
+                    <a href="{{ url_for('web.index') }}"
+                       class="flex-1 bg-gray-600 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium text-center">
+                        取消
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
