@@ -121,7 +121,7 @@ vid spectre/
 ```bash
 cd /Users/jasper/Documents/Code/VidSpectre
 uv run python run.py
-# 访问 http://localhost:5000 (或其他端口)
+# 访问 http://localhost:5002 (或其他端口)
 ```
 
 ## API 端口问题

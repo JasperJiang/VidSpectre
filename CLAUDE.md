@@ -9,12 +9,12 @@ cd /Users/jasper/Documents/Code/VidSpectre
 uv run python run.py
 ```
 
-The app runs on port 5000 by default. If port 5000 is in use (common with AirPlay on macOS), Flask will report an alternative port.
+The app runs on port 5002 by default. If port 5002 is in use (common with AirPlay on macOS), Flask will report an alternative port.
 
 ## Commands
 
 - **Run dev server**: `uv run python run.py` (uses Flask debug mode)
-- **Production server**: `uv run gunicorn -w 4 -b 0.0.0.0:5000 run:app`
+- **Production server**: `uv run gunicorn -w 4 -b 0.0.0.0:5002 run:app`
 
 ## Architecture
 
