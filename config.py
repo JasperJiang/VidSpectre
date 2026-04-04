@@ -13,6 +13,7 @@ class Config:
     # Scheduler settings
     SCHEDULER_INTERVAL_HOURS = 6
     DEFAULT_INTERVAL_CRON = "0 */6 * * *"  # 默认每6小时
+    FETCH_RETRY_COUNT = int(os.environ.get("FETCH_RETRY_COUNT", "3"))  # 默认重试3次
 
     # Plugin settings
     PLUGIN_DIR = BASE_DIR / "plugins" / "sources"
