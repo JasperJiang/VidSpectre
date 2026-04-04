@@ -4,7 +4,7 @@ from app import db
 from app.database.models import Subscription
 from plugins.registry import registry
 from config import Config
-from datetime import datetime
+from app.core.checker import _fetch_and_update_subscription
 import asyncio
 
 @api_bp.route("/subscriptions", methods=["GET"])
@@ -90,26 +90,10 @@ def fetch_subscription(sub_id):
     """手动触发单个订阅的爬取"""
     subscription = Subscription.query.get_or_404(sub_id)
 
-    plugin = registry.get_data_source(subscription.source_plugin)
-    if not plugin:
-        return jsonify({"error": "Plugin not found"}), 404
+    _, latest = _fetch_and_update_subscription(subscription)
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        if subscription.media_type == 'movie':
-            result = loop.run_until_complete(plugin.get_movie_links(subscription.media_id))
-        else:
-            result = loop.run_until_complete(plugin.get_episode_links(subscription.media_id))
-
-        # 更新最新集数和时间
-        if result and result.keys():
-            latest = max(result.keys())
-            subscription.latest_episode = str(latest)
-            subscription.latest_update_time = datetime.utcnow()
-            db.session.commit()
-    finally:
-        loop.close()
+    if latest is None:
+        return jsonify({"error": "Failed to fetch episodes"}), 500
 
     return jsonify({"success": True, "latest_episode": subscription.latest_episode})
 

@@ -202,15 +202,29 @@ class BtbtlaParser:
         return episodes
 
     def _extract_episode_number(self, title: str) -> int:
-        """Extract episode number from title like '第1集' or '第01集'"""
+        """Extract episode number from title like '第1集' or '第01集' or '[61]'"""
         import re
+        # Pattern 1: "第xx集" - most reliable
         match = re.search(r'第(\d+)集', title)
         if match:
             return int(match.group(1))
-        # Try alternative patterns
-        match = re.search(r'(\d+)', title)
-        if match:
-            return int(match.group(1))
+
+        # Pattern 2: extract all bracketed numbers like [61] and find the episode
+        # Episode numbers are typically 1-999, years are 1990-2030
+        bracket_numbers = re.findall(r'\[(\d+)\]', title)
+        for num_str in reversed(bracket_numbers):  # Try from end, usually episode comes after year
+            num = int(num_str)
+            if 1 <= num <= 999:  # Likely an episode number
+                return num
+
+        # Pattern 3: no brackets found, try to find any reasonable episode number (1-999)
+        # Skip 4+ digit numbers as they're likely years
+        all_numbers = re.findall(r'\d+', title)
+        for num_str in all_numbers:
+            num = int(num_str)
+            if 1 <= num <= 999:
+                return num
+
         return 0
 
     def get_magnet_link(self, tdown_url: str) -> Optional[str]:
