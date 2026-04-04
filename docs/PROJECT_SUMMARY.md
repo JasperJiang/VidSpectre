@@ -167,6 +167,18 @@ uv run python run.py
 
 测试中发现 5000 端口被 AirPlay 占用，常用测试端口：5002, 5003
 
+### 12. 设置持久化修复
+- **问题**：`/settings` 页面的"默认爬取周期"设置只保存到内存，应用重启后丢失
+- **修复**：
+  - 新增 `Setting` 模型（key-value 表）存储设置到 SQLite 数据库
+  - `app/__init__.py` 启动时从数据库加载 `default_interval_cron` 到 `Config`
+  - `app/web/routes.py` settings 路由改为保存到数据库
+- **相关文件**：`app/database/models.py`、`app/__init__.py`、`app/web/routes.py`
+
+### 13. 启动端口参数化
+- `run.py` 支持 `--port` 参数指定端口，默认 5002
+- 用法：`uv run python run.py --port 5003`
+
 ## 待完成功能
 
 1. 通知推送插件（预留接口，未实现）

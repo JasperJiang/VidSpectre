@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, jsonify
 from app.web import web_bp
 from app import db
-from app.database.models import Subscription
+from app.database.models import Subscription, Setting
 from config import Config
 
 @web_bp.route("/")
@@ -70,7 +70,15 @@ def settings():
     """全局设置页面"""
     if request.method == "POST":
         default_cron = request.form.get("default_cron")
-        # 保存到 config 对象
+        # 保存到数据库
+        setting = Setting.query.get("default_interval_cron")
+        if setting:
+            setting.value = default_cron
+        else:
+            setting = Setting(key="default_interval_cron", value=default_cron)
+            db.session.add(setting)
+        db.session.commit()
+        # 同时更新内存中的值
         Config.DEFAULT_INTERVAL_CRON = default_cron
         return redirect(url_for("web.settings"))
 

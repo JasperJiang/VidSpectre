@@ -29,7 +29,8 @@ uv sync
 ### 启动服务
 
 ```bash
-uv run python run.py
+uv run python run.py              # 默认端口 5002
+uv run python run.py --port 5003 # 指定端口
 ```
 
 访问 http://localhost:5002
@@ -109,3 +110,4 @@ VidSpectre/
 - 默认端口为 5002（避免与 AirPlay 冲突）
 - `media_id` 必须正确设置，否则无法展开剧集
 - 使用 `uv` 管理 Python 依赖
+- Settings 页面设置的默认爬取周期会持久化保存到数据库

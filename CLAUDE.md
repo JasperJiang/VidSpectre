@@ -13,7 +13,7 @@ The app runs on port 5002 by default. If port 5002 is in use (common with AirPla
 
 ## Commands
 
-- **Run dev server**: `uv run python run.py` (uses Flask debug mode)
+- **Run dev server**: `uv run python run.py [--port PORT]` (default port 5002, uses Flask debug mode)
 - **Production server**: `uv run gunicorn -w 4 -b 0.0.0.0:5002 run:app`
 - **Docker**: `docker build -t vidspectre . && docker run -d -p 5002:5002 -v ./storage:/app/storage vidspectre`
 - **Docker Compose**: `docker-compose up --build`
@@ -35,6 +35,7 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 ### Database Models
 - `Subscription` model in `app/database/models.py`
 - Key fields: `media_type`, `media_name`, `media_id`, `source_plugin`, `current_episode`, `search_keywords`, `interval_cron`
+- `Setting` model (key-value) for persisting app settings like `default_interval_cron`
 
 ### API Structure
 - REST API via Flask Blueprints in `app/api/routes.py`

@@ -39,3 +39,10 @@ class Subscription(db.Model):
             "search_keywords": self.search_keywords,
             "interval_cron": self.interval_cron,
         }
+
+
+class Setting(db.Model):
+    """Key-value settings stored in database"""
+    __tablename__ = "settings"
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, nullable=False)

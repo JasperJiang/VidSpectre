@@ -26,6 +26,12 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Load persisted settings
+        from app.database.models import Setting
+        from config import Config
+        cron_setting = Setting.query.get("default_interval_cron")
+        if cron_setting:
+            Config.DEFAULT_INTERVAL_CRON = cron_setting.value
 
     # Setup scheduler
     from app.scheduler.tasks import setup_scheduler
