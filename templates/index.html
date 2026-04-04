@@ -3,416 +3,144 @@
 {% block title %}订阅列表 - VidSpectre{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>我的订阅</h1>
-            <a href="{{ url_for('web.add_subscription') }}" class="btn btn-primary">添加订阅</a>
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-bold">我的订阅</h1>
+    <a href="{{ url_for('web.add_subscription') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+        添加订阅
+    </a>
+</div>
+
+{% if subscriptions %}
+<div class="space-y-4">
+    {% for sub in subscriptions %}
+    <!-- Subscription Card -->
+    <div class="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden subscription-card">
+        <!-- Card Header -->
+        <div class="p-4 flex justify-between items-start">
+            <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                    {% if sub.media_type == 'movie' %}
+                    <span class="bg-blue-600 text-xs px-2 py-0.5 rounded">电影</span>
+                    {% else %}
+                    <span class="bg-green-600 text-xs px-2 py-0.5 rounded">电视剧</span>
+                    {% endif %}
+                    {% if not sub.media_id %}
+                    <span class="text-yellow-400 text-xs" title="资源未找到，请在添加订阅时搜索并选择正确的资源">⚠</span>
+                    {% endif %}
+                </div>
+                <h3 class="text-lg font-medium truncate">{{ sub.media_name }}</h3>
+            </div>
+            {% if sub.media_type == 'tv' and sub.media_id %}
+            <button class="toggle-episodes ml-2 text-sm text-blue-400 hover:text-blue-300"
+                    data-sub-id="{{ sub.id }}"
+                    data-media-id="{{ sub.media_id }}"
+                    data-source="{{ sub.source_plugin }}">
+                展开
+            </button>
+            {% endif %}
         </div>
 
-        {% if subscriptions %}
-        <div class="table-responsive">
-            <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th>类型</th>
-                        <th>名称</th>
-                        <th>当前看到</th>
-                        <th>关键字 <span class="help-btn" style="cursor: help; color: #6c757d;" data-bs-toggle="tooltip" data-bs-placement="top" title="多个关键字用逗号分隔，如: HDR,2160p">?</span></th>
-                        <th>最新更新</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for sub in subscriptions %}
-                    <tr>
-                        <td>
-                            {% if sub.media_type == 'movie' %}
-                            <span class="badge bg-primary">电影</span>
-                            {% else %}
-                            <span class="badge bg-success">电视剧</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {{ sub.media_name }}
-                            {% if sub.media_type == 'tv' %}
-                                {% if sub.media_id %}
-                            <button class="btn btn-sm btn-outline-secondary ms-1 toggle-episodes"
-                                    data-sub-id="{{ sub.id }}"
-                                    data-media-id="{{ sub.media_id }}"
-                                    data-source="{{ sub.source_plugin }}"
-                                    onclick="toggleEpisodes(this)">
-                                展开
-                            </button>
-                                {% else %}
-                            <span class="text-danger ms-1" style="cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="资源未找到，请在添加订阅时搜索并选择正确的资源">⚠</span>
-                                {% endif %}
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if sub.media_type == 'tv' %}
-                            <input type="text"
-                                   class="form-control form-control-sm episode-input"
-                                   style="width: 60px;"
-                                   value="{{ sub.current_episode or '' }}"
-                                   placeholder="集数"
-                                   data-sub-id="{{ sub.id }}">
-                            {% else %}
-                            -
-                            {% endif %}
-                        </td>
-                        <td>
-                            <input type="text"
-                                   class="form-control form-control-sm keywords-input"
-                                   style="width: 150px;"
-                                   value="{{ sub.search_keywords or '' }}"
-                                   placeholder="关键字"
-                                   data-sub-id="{{ sub.id }}">
-                        </td>
-                        <td>{{ sub.latest_episode or '-' }}</td>
-                        <td>
-                            <button class="btn btn-sm btn-outline-primary save-btn"
-                                    data-sub-id="{{ sub.id }}"
-                                    title="保存"
-                                    onclick="saveSubscription({{ sub.id }})">
-                                💾
-                            </button>
-                            <button class="btn btn-sm btn-outline-success fetch-btn"
-                                    data-sub-id="{{ sub.id }}"
-                                    title="立即爬取"
-                                    onclick="fetchSubscription(this)">
-                                🔄
-                            </button>
-                            <form action="{{ url_for('web.delete_subscription', sub_id=sub.id) }}" method="POST" style="display:inline; margin-left: 5px;">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('删除?')">删除</button>
-                            </form>
-                        </td>
-                    </tr>
-                    <tr class="episode-row" id="episodes-{{ sub.id }}" style="display: none;">
-                        <td colspan="5">
-                            <div class="episode-list-container p-3 bg-light rounded">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="mb-0">剧集列表</h6>
-                                    <button class="btn btn-sm btn-close close-episodes" data-sub-id="{{ sub.id }}"></button>
-                                </div>
-                                <div class="episodes-loading">加载中...</div>
-                                <div class="episodes-content" id="episodes-content-{{ sub.id }}"></div>
-                            </div>
-                        </td>
-                    </tr>
-                    <tr class="interval-row" id="interval-{{ sub.id }}" style="display: none;">
-                        <td colspan="5">
-                            <div class="p-3 bg-light rounded">
-                                <div class="row g-2 align-items-center">
-                                    <div class="col-auto">
-                                        <label class="form-label mb-0">爬取周期:</label>
-                                    </div>
-                                    <div class="col-auto">
-                                        <select class="form-select form-select-sm interval-select"
-                                                data-sub-id="{{ sub.id }}">
-                                            <option value="0 * * * *" {% if sub.interval_cron=='0 * * * *' %}selected{% endif %}>每小时</option>
-                                            <option value="0 */6 * * *" {% if sub.interval_cron=='0 */6 * * *' %}selected{% endif %}>每6小时</option>
-                                            <option value="0 */12 * * *" {% if sub.interval_cron=='0 */12 * * *' %}selected{% endif %}>每12小时</option>
-                                            <option value="0 9 * * *" {% if sub.interval_cron=='0 9 * * *' %}selected{% endif %}>每天早上9点</option>
-                                            <option value="0 9,21 * * *" {% if sub.interval_cron=='0 9,21 * * *' %}selected{% endif %}>每天两次</option>
-                                            <option value="0 9 * * 1,3,5" {% if sub.interval_cron=='0 9 * * 1,3,5' %}selected{% endif %}>每周一三五四</option>
-                                            <option value="custom" {% if sub.interval_cron and sub.interval_cron not in ['0 * * * *','0 */6 * * *','0 */12 * * *','0 9 * * *','0 9,21 * * *','0 9 * * 1,3,5'] %}selected{% endif %}>自定义</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-auto {% if not sub.interval_cron or sub.interval_cron in ['0 * * * *','0 */6 * * *','0 */12 * * *','0 9 * * *','0 9,21 * * *','0 9 * * 1,3,5'] %}d-none{% endif %}">
-                                        <input type="text" class="form-control form-control-sm custom-cron"
-                                               data-sub-id="{{ sub.id }}"
-                                               value="{{ sub.interval_cron or default_cron }}"
-                                               placeholder="0 */6 * * *">
-                                    </div>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <!-- Card Body -->
+        <div class="px-4 pb-2 text-sm text-gray-400">
+            <div class="flex flex-wrap gap-4">
+                {% if sub.media_type == 'tv' %}
+                <div>
+                    <span class="text-gray-500">看到:</span>
+                    <input type="text"
+                           class="episode-input bg-gray-700 border border-gray-600 rounded px-2 py-1 w-16 text-white"
+                           value="{{ sub.current_episode or '' }}"
+                           placeholder="集数"
+                           data-sub-id="{{ sub.id }}">
+                </div>
+                {% endif %}
+                <div>
+                    <span class="text-gray-500">关键字:</span>
+                    <input type="text"
+                           class="keywords-input bg-gray-700 border border-gray-600 rounded px-2 py-1 w-32 text-white"
+                           value="{{ sub.search_keywords or '' }}"
+                           placeholder="关键字"
+                           data-sub-id="{{ sub.id }}">
+                </div>
+                <div>
+                    <span class="text-gray-500">最新:</span>
+                    <span class="latest-episode">{{ sub.latest_episode or '-' }}</span>
+                </div>
+            </div>
         </div>
-        {% else %}
-        <div class="alert alert-info">
-            暂无订阅，<a href="{{ url_for('web.add_subscription') }}">点击添加</a>
+
+        <!-- Card Actions -->
+        <div class="px-4 py-3 bg-gray-750 border-t border-gray-700 flex items-center justify-between">
+            <button class="fetch-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                    data-sub-id="{{ sub.id }}">
+                🔄 爬取
+            </button>
+            <div class="relative">
+                <button class="more-menu-btn bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg">
+                    ⋯ 更多
+                </button>
+                <div class="more-menu hidden absolute right-0 mt-2 w-36 bg-gray-700 rounded-lg shadow-lg border border-gray-600 z-10">
+                    <button class="save-btn w-full text-left px-4 py-2 hover:bg-gray-600 rounded-t-lg"
+                            data-sub-id="{{ sub.id }}">
+                        💾 保存
+                    </button>
+                    <a href="{{ url_for('web.edit_subscription', sub_id=sub.id) }}"
+                       class="block px-4 py-2 hover:bg-gray-600">
+                        ✏️ 编辑
+                    </a>
+                    <form class="delete-form" action="{{ url_for('web.delete_subscription', sub_id=sub.id) }}" method="POST">
+                        <button type="submit" class="w-full text-left px-4 py-2 hover:bg-gray-600 text-red-400 rounded-b-lg">
+                            🗑️ 删除
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Episodes Expandable Section -->
+        {% if sub.media_type == 'tv' %}
+        <div id="episodes-{{ sub.id }}" style="display: none;" class="border-t border-gray-700">
+            <div class="p-4 bg-gray-750">
+                <div class="flex justify-between items-center mb-3">
+                    <h6 class="font-medium text-gray-300">剧集列表</h6>
+                    <button class="close-episodes text-gray-400 hover:text-white"
+                            data-sub-id="{{ sub.id }}">
+                        ✕
+                    </button>
+                </div>
+                <div class="episodes-loading text-gray-400">加载中...</div>
+                <div id="episodes-content-{{ sub.id }}"></div>
+
+                <!-- Interval Selector -->
+                <div class="mt-4 pt-4 border-t border-gray-600">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <label class="text-sm text-gray-400">爬取周期:</label>
+                        <select class="interval-select bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm"
+                                data-sub-id="{{ sub.id }}">
+                            <option value="0 * * * *" {% if sub.interval_cron=='0 * * * *' %}selected{% endif %}>每小时</option>
+                            <option value="0 */6 * * *" {% if sub.interval_cron=='0 */6 * * *' %}selected{% endif %}>每6小时</option>
+                            <option value="0 */12 * * *" {% if sub.interval_cron=='0 */12 * * *' %}selected{% endif %}>每12小时</option>
+                            <option value="0 9 * * *" {% if sub.interval_cron=='0 9 * * *' %}selected{% endif %}>每天早上9点</option>
+                            <option value="0 9,21 * * *" {% if sub.interval_cron=='0 9,21 * * *' %}selected{% endif %}>每天两次</option>
+                            <option value="0 9 * * 1,3,5" {% if sub.interval_cron=='0 9 * * 1,3,5' %}selected{% endif %}>每周一三五四</option>
+                            <option value="custom" {% if sub.interval_cron and sub.interval_cron not in ['0 * * * *','0 */6 * * *','0 */12 * * *','0 9 * * *','0 9,21 * * *','0 9 * * 1,3,5'] %}selected{% endif %}>自定义</option>
+                        </select>
+                        <input type="text"
+                               class="custom-cron hidden bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm w-32"
+                               data-sub-id="{{ sub.id }}"
+                               value="{{ sub.interval_cron or default_cron }}"
+                               placeholder="0 */6 * * *">
+                    </div>
+                </div>
+            </div>
         </div>
         {% endif %}
     </div>
+    {% endfor %}
 </div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-window.fetchSubscription = function(btn) {
-    const subId = btn.dataset.subId;
-    btn.disabled = true;
-    btn.textContent = '...';
-
-    // 1. 先保存当前行的修改
-    saveSubscription(subId)
-        .then(() => {
-            // 2. 然后调用刷新API
-            return fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' });
-        })
-        .then(response => response.json())
-        .then(data => {
-            // 3. 更新页面上最新集数的显示
-            const row = btn.closest('tr');
-            const cells = row.querySelectorAll('td');
-            if (data.latest_episode && cells[4]) {
-                cells[4].textContent = data.latest_episode;
-            }
-            // 4. 如果剧集列表已展开，刷新它
-            const episodesContent = document.getElementById('episodes-content-' + subId);
-            const episodesRow = document.getElementById('episodes-' + subId);
-            if (episodesContent && episodesRow && episodesRow.style.display !== 'none') {
-                episodesContent.innerHTML = '';
-                const loading = episodesRow.querySelector('.episodes-loading');
-                if (loading) loading.style.display = 'block';
-                fetch(`/api/subscriptions/${subId}/episodes`)
-                    .then(r => r.json())
-                    .then(episodes => {
-                        if (loading) loading.style.display = 'none';
-                        if (Object.keys(episodes).length === 0) {
-                            episodesContent.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
-                        } else {
-                            const sorted = Object.keys(episodes).sort((a,b)=>b-a);
-                            episodesContent.innerHTML = '<div class="episode-items">' + sorted.map(ep =>
-                                `<div class="episode-item mb-2"><strong>第${ep}集</strong><div class="ms-2">` +
-                                episodes[ep].map(link => `<a href="${link.url}" class="me-2" target="_blank">${link.type === 'magnet' ? '磁力' : '种子'}</a>`).join('') +
-                                '</div></div>'
-                            ).join('') + '</div>';
-                        }
-                    });
-            }
-        })
-        .then(() => {
-            btn.textContent = '✓';
-        })
-        .catch(() => {
-            btn.textContent = '✗';
-        })
-        .finally(() => {
-            btn.disabled = false;
-            setTimeout(() => btn.textContent = '🔄', 1500);
-        });
-}
-
-window.saveSubscription = function(subId) {
-    const episodeInput = document.querySelector(`.episode-input[data-sub-id="${subId}"]`);
-    const keywordsInput = document.querySelector(`.keywords-input[data-sub-id="${subId}"]`);
-
-    const currentEpisode = episodeInput ? episodeInput.value.trim() : '';
-    const searchKeywords = keywordsInput ? keywordsInput.value.trim() : '';
-
-    return fetch(`/api/subscriptions/${subId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ current_episode: currentEpisode, search_keywords: searchKeywords })
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (episodeInput) {
-            episodeInput.classList.add('border-success');
-            setTimeout(() => episodeInput.classList.remove('border-success'), 1000);
-        }
-        if (keywordsInput) {
-            keywordsInput.classList.add('border-success');
-            setTimeout(() => keywordsInput.classList.remove('border-success'), 1000);
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Help button now uses Bootstrap tooltip (see title attribute)
-
-    // Handle unified save button
-    document.querySelectorAll('.save-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const subId = this.dataset.subId;
-            const episodeInput = document.querySelector(`.episode-input[data-sub-id="${subId}"]`);
-            const keywordsInput = document.querySelector(`.keywords-input[data-sub-id="${subId}"]`);
-
-            const currentEpisode = episodeInput ? episodeInput.value.trim() : '';
-            const searchKeywords = keywordsInput ? keywordsInput.value.trim() : '';
-
-            fetch(`/api/subscriptions/${subId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    current_episode: currentEpisode,
-                    search_keywords: searchKeywords
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (episodeInput) {
-                    episodeInput.classList.add('border-success');
-                    setTimeout(() => episodeInput.classList.remove('border-success'), 1000);
-                }
-                if (keywordsInput) {
-                    keywordsInput.classList.add('border-success');
-                    setTimeout(() => keywordsInput.classList.remove('border-success'), 1000);
-                }
-            });
-        });
-    });
-
-    // Save on Enter key for both inputs
-    document.querySelectorAll('.episode-input, .keywords-input').forEach(function(input) {
-        input.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const subId = this.dataset.subId;
-                document.querySelector(`.save-btn[data-sub-id="${subId}"]`).click();
-            }
-        });
-    });
-
-    // Toggle episodes
-    document.querySelectorAll('.toggle-episodes').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const subId = this.dataset.subId;
-            const row = document.getElementById(`episodes-${subId}`);
-            const content = document.getElementById(`episodes-content-${subId}`);
-            const loading = row.querySelector('.episodes-loading');
-
-            if (row.style.display === 'none') {
-                row.style.display = 'table-row';
-                this.textContent = '收起剧集';
-
-                // Always re-fetch episodes on each expand click
-                fetch(`/api/subscriptions/${subId}/episodes`)
-                        .then(response => response.json())
-                        .then(episodes => {
-                            loading.style.display = 'none';
-                            if (Object.keys(episodes).length === 0) {
-                                content.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
-                            } else {
-                                // Sort episodes descending
-                                const sortedEps = Object.keys(episodes).sort((a, b) => b - a);
-                                let html = '<div class="row">';
-                                sortedEps.forEach(ep => {
-                                    const links = episodes[ep];
-                                    html += `<div class="col-md-4 mb-2"><strong>第${ep}集</strong><ul class="list-unstyled ms-3">`;
-                                    links.forEach(link => {
-                                        const url = encodeURIComponent(link.url);
-                                        html += `<li class="episode-link-item">
-                                            <a href="#" class="get-magnet-link text-decoration-none"
-                                               data-url="${link.url}"
-                                               data-title="${link.title.substring(0, 30)}...">
-                                               ${link.title.substring(0, 40)}...
-                                            </a>
-                                        </li>`;
-                                    });
-                                    html += '</ul></div>';
-                                });
-                                html += '</div>';
-                                content.innerHTML = html;
-
-                                // Add click handlers for magnet links
-                                content.querySelectorAll('.get-magnet-link').forEach(function(link) {
-                                    link.addEventListener('click', function(e) {
-                                        e.preventDefault();
-                                        const url = this.dataset.url;
-                                        const title = this.dataset.title;
-
-                                        // Show loading
-                                        this.textContent = '获取中...';
-
-                                        fetch(`/api/download-link?url=${encodeURIComponent(url)}`)
-                                            .then(resp => resp.json())
-                                            .then(data => {
-                                                if (data.magnet) {
-                                                    // Create a textarea to copy
-                                                    const magnetLink = data.magnet;
-                                                    prompt('磁力链接 (Ctrl+C 复制):', magnetLink);
-                                                } else {
-                                                    alert('获取失败: ' + (data.error || '未知错误'));
-                                                    this.textContent = title;
-                                                }
-                                            })
-                                            .catch(err => {
-                                                alert('获取失败');
-                                                this.textContent = title;
-                                            });
-                                    });
-                                });
-                            }
-                        })
-                        .catch(err => {
-                            loading.textContent = '加载失败';
-                        });
-            } else {
-                row.style.display = 'none';
-                this.textContent = '展开剧集';
-            }
-        });
-    });
-
-    // Close episodes
-    document.querySelectorAll('.close-episodes').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const subId = this.dataset.subId;
-            const row = document.getElementById(`episodes-${subId}`);
-            const toggleBtn = document.querySelector(`.toggle-episodes[data-sub-id="${subId}"]`);
-            row.style.display = 'none';
-            toggleBtn.textContent = '展开剧集';
-        });
-    });
-
-    // 周期选择器联动
-    document.querySelectorAll('.interval-select').forEach(function(select) {
-        select.addEventListener('change', function() {
-            const subId = this.dataset.subId;
-            const customInput = document.querySelector(`.custom-cron[data-sub-id="${subId}"]`);
-            const wrapper = customInput.parentElement;
-
-            if (this.value === 'custom') {
-                wrapper.classList.remove('d-none');
-                customInput.focus();
-            } else {
-                wrapper.classList.add('d-none');
-                saveInterval(subId, this.value);
-            }
-        });
-    });
-
-    // 保存周期函数
-    function saveInterval(subId, cron) {
-        fetch(`/api/subscriptions/${subId}/interval`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ interval_cron: cron })
-        });
-    }
-
-    // 自定义输入框失焦保存
-    document.querySelectorAll('.custom-cron').forEach(function(input) {
-        input.addEventListener('blur', function() {
-            const subId = this.dataset.subId;
-            if (this.value.trim()) {
-                saveInterval(subId, this.value.trim());
-            }
-        });
-    });
-
-    // 展开/收起按钮联动显示周期设置行
-    document.querySelectorAll('.toggle-episodes').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const subId = this.dataset.subId;
-            const intervalRow = document.getElementById(`interval-${subId}`);
-            if (intervalRow) {
-                if (this.textContent === '收起剧集') {
-                    intervalRow.style.display = 'table-row';
-                } else {
-                    intervalRow.style.display = 'none';
-                }
-            }
-        });
-    });
-});
+{% else %}
+<div class="bg-gray-800 rounded-lg p-8 text-center border border-gray-700">
+    <p class="text-gray-400 mb-4">暂无订阅</p>
+    <a href="{{ url_for('web.add_subscription') }}" class="text-blue-400 hover:text-blue-300">点击添加</a>
+</div>
+{% endif %}
 {% endblock %}
