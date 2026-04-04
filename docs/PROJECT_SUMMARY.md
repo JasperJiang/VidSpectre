@@ -1,0 +1,136 @@
+# VidSpectre 项目总结
+
+## 项目概述
+
+VidSpectre 是一个影视订阅爬取应用，采用插件式架构，支持：
+- Web 管理界面（订阅列表、添加/删除订阅）
+- 插件式数据源（目前实现 btbtla.com）
+- 插件式通知系统（预留接口，暂未实现）
+- 定时自动检查更新
+- 集数追踪（当前看到第几集）
+- 搜索关键字过滤下载资源
+- 展开剧集获取磁力链接
+
+## 技术栈
+
+- **后端**: Python 3.x + Flask + SQLite + SQLAlchemy
+- **调度**: APScheduler
+- **爬虫**: requests + BeautifulSoup
+- **前端**: Bootstrap 5 + Vanilla JS
+
+## 项目结构
+
+```
+vid spectre/
+├── app/
+│   ├── __init__.py          # Flask应用工厂
+│   ├── api/                 # REST API
+│   │   └── routes.py
+│   ├── web/                 # Web界面
+│   │   └── routes.py
+│   ├── core/
+│   │   └── checker.py       # 更新检查逻辑
+│   ├── scheduler/
+│   │   └── tasks.py         # APScheduler任务
+│   └── database/
+│       └── models.py        # SQLAlchemy模型
+├── plugins/                 # 插件系统
+│   ├── interfaces.py        # 插件接口定义
+│   ├── loader.py            # 插件加载器
+│   ├── registry.py          # 插件注册表
+│   └── sources/             # 数据源插件
+│       └── btbtla/
+│           ├── plugin.py    # 插件实现
+│           └── parser.py    # 页面解析
+├── templates/               # HTML模板
+│   ├── base.html
+│   ├── index.html
+│   └── subscription.html
+├── static/css/main.css
+├── config.py
+├── requirements.txt
+└── run.py
+```
+
+## 功能迭代记录
+
+### 1. 基础架构 (Task 1-3)
+- 创建 Flask 应用、数据库模型
+- 实现插件系统核心（接口、加载器、注册表）
+
+### 2. btbtla 数据源插件 (Task 4)
+- 实现搜索功能（URL: `/search/{keyword}`）
+- 实现详情页解析（提取集数、下载链接）
+- 站点结构：详情页 -> /tdown/ 页面 -> 磁力链接
+
+### 3. REST API (Task 5)
+- `GET /api/subscriptions` - 列表
+- `POST /api/subscriptions` - 添加
+- `DELETE /api/subscriptions/<id>` - 删除
+- `PUT /api/subscriptions/<id>` - 更新（含 current_episode, search_keywords）
+- `GET /api/subscriptions/<id>/episodes` - 获取剧集列表（支持关键字过滤）
+- `GET /api/search` - 搜索媒体
+- `GET /api/plugins` - 插件列表
+
+### 4. Web UI (Task 6)
+- 订阅列表页面
+- 添加订阅表单
+- 表头：类型 | 名称 | 当前看到 | 关键字 | 最新更新 | 操作
+
+### 5. 定时任务 (Task 7)
+- APScheduler 每6小时自动检查更新
+- 智能判断：只推送用户标记集数之后的更新
+
+### 6. 集数追踪功能 (新增)
+- 数据库添加 `current_episode` 字段
+- 前端输入框标记当前看到第几集
+- 爬取逻辑比较：用户当前集数 vs 最新集数
+
+### 7. 剧集展开功能 (新增)
+- 点击"展开"按钮展开剧集列表
+- 按集数分组显示资源
+- 点击资源获取磁力链接
+
+### 8. 搜索关键字功能 (新增)
+- 数据库添加 `search_keywords` 字段
+- 前端在表头"关键字"列显示 **?** 帮助按钮
+- 多个关键字用逗号分隔
+- 过滤逻辑：资源标题必须包含所有关键字才显示
+
+## 设计决策
+
+### 为什么用 uv？
+用户要求使用 uv 管理 Python 依赖，项目使用 `uv run` 执行命令。
+
+### btbtla 插件特殊处理
+- 搜索URL：`/search/{keyword}` 而非 `?keyword=`
+- 下载链接不直接显示磁力，需要访问 `/tdown/` 页面获取
+- 集数从下载链接标题中提取（如"第64集"）
+
+### 关键字过滤逻辑
+- 用户输入：`2160p, HDR, 杜比`
+- 系统过滤：资源标题包含所有关键字
+- 目的：让用户筛选高质量/特定版本资源
+
+### 表头设计
+- 关键字帮助按钮放在表头，避免每个输入框重复
+- 点击弹出 alert 说明用法（简单直接）
+
+## 启动方式
+
+```bash
+cd /Users/jasper/Documents/Code/VidSpectre
+uv run python run.py
+# 访问 http://localhost:5000 (或其他端口)
+```
+
+## API 端口问题
+
+测试中发现 5000 端口被 AirPlay 占用，常用测试端口：5002, 5003
+
+## 待完成功能
+
+1. 通知推送插件（预留接口，未实现）
+2. 更多的数据源插件
+3. 更完善的错误处理
+4. 日志系统（当前用 print）

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}设置 - VidSpectre{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>全局设置</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">默认爬取周期 (Cron表达式)</label>
+                        <div class="input-group">
+                            <select class="form-select" id="preset-select" style="max-width: 200px;">
+                                <option value="">选择预设...</option>
+                                <option value="0 * * * *">每小时</option>
+                                <option value="0 */6 * * *">每6小时</option>
+                                <option value="0 */12 * * *">每12小时</option>
+                                <option value="0 9 * * *">每天早上9点</option>
+                                <option value="0 9,21 * * *">每天两次</option>
+                                <option value="0 9 * * 1,3,5">每周一三五四</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                            <input type="text" name="default_cron" class="form-control"
+                                   value="{{ default_cron }}" placeholder="0 */6 * * *">
+                        </div>
+                        <div class="form-text">
+                            格式说明: 分 小时 日 月 周<br>
+                            例: <code>0 */6 * * *</code> = 每6小时, <code>0 9 * * *</code> = 每天9点
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="{{ url_for('web.index') }}" class="btn btn-secondary">返回</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('preset-select').addEventListener('change', function() {
+    if (this.value && this.value !== 'custom') {
+        document.querySelector('input[name="default_cron"]').value = this.value;
+    }
+});
+</script>
+{% endblock %}

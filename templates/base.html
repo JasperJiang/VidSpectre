@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}VidSpectre{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('web.index') }}">VidSpectre</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.index') }}">订阅列表</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.add_subscription') }}">添加订阅</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('web.settings') }}">设置</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+function fetchSubscription(btn) {
+    const subId = btn.dataset.subId;
+    btn.disabled = true;
+    btn.textContent = '...';
+    fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' })
+        .then(r => r.json()).then(d => {
+            btn.disabled = false;
+            btn.textContent = '✓';
+            setTimeout(() => btn.textContent = '🔄', 1500);
+        }).catch(() => {
+            btn.disabled = false;
+            btn.textContent = '✗';
+            setTimeout(() => btn.textContent = '🔄', 1500);
+        });
+}
+function saveSubscription(subId) {
+    const ep = document.querySelector('.episode-input[data-sub-id="'+subId+'"]');
+    const kw = document.querySelector('.keywords-input[data-sub-id="'+subId+'"]');
+    fetch(`/api/subscriptions/${subId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({current_episode:ep?ep.value:'',search_keywords:kw?kw.value:''}) }).then(r=>r.json()).then(d=>{if(ep){ep.classList.add('border-success');setTimeout(()=>ep.classList.remove('border-success'),1000)}if(kw){kw.classList.add('border-success');setTimeout(()=>kw.classList.remove('border-success'),1000)}});
+}
+function toggleEpisodes(btn) {
+    const subId = btn.dataset.subId;
+    const row = document.getElementById('episodes-'+subId);
+    const content = document.getElementById('episodes-content-'+subId);
+    const loading = row ? row.querySelector('.episodes-loading') : null;
+    if (row && row.style.display === 'none') {
+        row.style.display = 'table-row';
+        btn.textContent = '收起';
+        if (content && content.innerHTML === '') {
+            fetch(`/api/subscriptions/${subId}/episodes`).then(r=>r.json()).then(episodes=>{
+                loading.style.display = 'none';
+                if (Object.keys(episodes).length === 0) {
+                    content.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
+                } else {
+                    const sorted = Object.keys(episodes).sort((a,b)=>b-a);
+                    let html = '<div class="row">';
+                    sorted.forEach(ep => {
+                        const links = episodes[ep];
+                        html += '<div class="col-md-4 mb-2"><strong>第'+ep+'集</strong><ul class="list-unstyled ms-3">';
+                        links.forEach(link => {
+                            html += '<li class="episode-link-item"><a href="#" class="get-magnet-link text-decoration-none" data-url="'+link.url+'" data-title="'+link.title.substring(0,30)+'...">'+link.title.substring(0,40)+'...</a></li>';
+                        });
+                        html += '</ul></div>';
+                    });
+                    html += '</div>';
+                    content.innerHTML = html;
+                    content.querySelectorAll('.get-magnet-link').forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            this.textContent = '获取中...';
+                            fetch('/api/download-link?url='+encodeURIComponent(this.dataset.url)).then(r=>r.json()).then(d=>{if(d.magnet){prompt('磁力链接:',d.magnet)}else{alert('获取失败');this.textContent=this.dataset.title}}).catch(()=>{alert('获取失败');this.textContent=this.dataset.title});
+                        });
+                    });
+                }
+            }).catch(err=>{loading.textContent='加载失败'});
+        }
+    } else if (row) {
+        row.style.display = 'none';
+        btn.textContent = '展开';
+    }
+}
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
