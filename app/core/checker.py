@@ -86,33 +86,38 @@ def run_check():
     finally:
         loop.close()
 
-def run_check_for_subscription(sub_id):
-    """检查单个订阅"""
-    from datetime import datetime
-
-    subscription = Subscription.query.get(sub_id)
-    if not subscription or subscription.status != 'active':
-        return
-
+def _fetch_and_update_subscription(subscription: Subscription) -> tuple[bool, int | None]:
+    """
+    抓取订阅的最新集数并更新数据库。
+    返回 (是否更新了, 最新集数或None)
+    """
     plugin = registry.get_data_source(subscription.source_plugin)
     if not plugin:
-        return
+        return False, None
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        # 根据 media_type 调用不同的方法
         if subscription.media_type == 'movie':
             result = loop.run_until_complete(plugin.get_movie_links(subscription.media_id))
         else:
             result = loop.run_until_complete(plugin.get_episode_links(subscription.media_id))
 
         if result and result.keys():
-            latest = max(result.keys())
-            # 只有当有更新时才记录
+            latest = max(int(k) for k in result.keys())
             if subscription.latest_episode != str(latest):
                 subscription.latest_episode = str(latest)
                 subscription.latest_update_time = datetime.utcnow()
                 db.session.commit()
+                return True, latest
+            return False, latest
+        return False, None
     finally:
         loop.close()
+
+def run_check_for_subscription(sub_id):
+    """检查单个订阅（供调度器调用）"""
+    subscription = Subscription.query.get(sub_id)
+    if not subscription or subscription.status != 'active':
+        return
+    _fetch_and_update_subscription(subscription)

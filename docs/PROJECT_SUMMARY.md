@@ -118,6 +118,13 @@ vid spectre/
 - CSS 选择器修复（`.module-item` 匹配实际页面结构）
 - 清理无法执行的死代码
 
+### 10. 集数和爬取相关Bug修复
+- **年份误识别为集数**：`parser.py` 的 `_extract_episode_number` 原来用 `(\d+)` 正则捕获数字，文件名中的 `[2023]` 年份被误认为集数。修复：优先匹配 `第(\d+)集` 格式，再从 `[...]` 括号中提取集数（1-999范围），跳过4位数以上的年份
+- **最新集数排序错误**：`checker.py` 和 `api/routes.py` 中 `max(result.keys())` 使用字符串比较，导致 `"99" > "132"`（因为 `'9' > '1'`）。修复：`max(int(k) for k in result.keys())`
+- **手动爬取不刷新页面**：前端 `fetchSubscription` 函数获取最新集数后不更新 DOM，修复后会自动更新"最新更新"列和已展开的剧集列表
+- **重复事件绑定**：爬取按钮同时有 `onclick` 和 `addEventListener`，导致点击触发两次 API 调用，删除重复的监听器
+- **代码重构**：`checker.py` 和 `api/routes.py` 中重复的爬取逻辑合并到 `_fetch_and_update_subscription` 共享函数
+
 ## 设计决策
 
 ### 为什么用 uv？

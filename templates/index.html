@@ -154,6 +154,35 @@ window.fetchSubscription = function(btn) {
         .then(data => {
             btn.disabled = false;
             btn.textContent = '✓';
+            // 更新最新集数显示
+            if (data.latest_episode) {
+                const row = btn.closest('tr');
+                const cells = row.querySelectorAll('td');
+                if (cells[4]) cells[4].textContent = data.latest_episode;
+            }
+            // 如果剧集列表已展开，刷新它
+            const episodesContent = document.getElementById('episodes-content-' + subId);
+            const episodesRow = document.getElementById('episodes-' + subId);
+            if (episodesContent && episodesRow && episodesRow.style.display !== 'none') {
+                episodesContent.innerHTML = '';
+                const loading = episodesRow.querySelector('.episodes-loading');
+                if (loading) loading.style.display = 'block';
+                fetch(`/api/subscriptions/${subId}/episodes`)
+                    .then(r => r.json())
+                    .then(episodes => {
+                        if (loading) loading.style.display = 'none';
+                        if (Object.keys(episodes).length === 0) {
+                            episodesContent.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
+                        } else {
+                            const sorted = Object.keys(episodes).sort((a,b)=>b-a);
+                            episodesContent.innerHTML = '<div class="episode-items">' + sorted.map(ep =>
+                                `<div class="episode-item mb-2"><strong>第${ep}集</strong><div class="ms-2">` +
+                                episodes[ep].map(link => `<a href="${link.url}" class="me-2" target="_blank">${link.type === 'magnet' ? '磁力' : '种子'}</a>`).join('') +
+                                '</div></div>'
+                            ).join('') + '</div>';
+                        }
+                    });
+            }
             setTimeout(() => btn.textContent = '🔄', 1500);
         })
         .catch(() => {
@@ -328,29 +357,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const toggleBtn = document.querySelector(`.toggle-episodes[data-sub-id="${subId}"]`);
             row.style.display = 'none';
             toggleBtn.textContent = '展开剧集';
-        });
-    });
-
-    // 爬取按钮
-    document.querySelectorAll('.fetch-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            const subId = this.dataset.subId;
-            const originalText = this.textContent;
-            this.disabled = true;
-            this.textContent = '...';
-
-            fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' })
-                .then(response => response.json())
-                .then(data => {
-                    this.disabled = false;
-                    this.textContent = '✓';
-                    setTimeout(() => this.textContent = originalText, 1500);
-                })
-                .catch(() => {
-                    this.disabled = false;
-                    this.textContent = '✗';
-                    setTimeout(() => this.textContent = originalText, 1500);
-                });
         });
     });
 
