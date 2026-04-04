@@ -69,24 +69,6 @@ def get_subscription(sub_id):
     subscription = Subscription.query.get_or_404(sub_id)
     return jsonify(subscription.to_dict())
 
-@api_bp.route("/subscriptions/<int:sub_id>/interval", methods=["GET"])
-def get_subscription_interval(sub_id):
-    """获取订阅的爬取周期"""
-    subscription = Subscription.query.get_or_404(sub_id)
-    interval = subscription.interval_cron or Config.DEFAULT_INTERVAL_CRON
-    return jsonify({"interval_cron": interval})
-
-@api_bp.route("/subscriptions/<int:sub_id>/interval", methods=["PUT"])
-def update_subscription_interval(sub_id):
-    """更新订阅的爬取周期"""
-    subscription = Subscription.query.get_or_404(sub_id)
-    data = request.json
-    interval_cron = data.get("interval_cron")
-    # None 或空字符串表示使用全局默认值
-    subscription.interval_cron = interval_cron if interval_cron else None
-    db.session.commit()
-    return jsonify({"success": True})
-
 @api_bp.route("/subscriptions/<int:sub_id>/fetch", methods=["POST"])
 def fetch_subscription(sub_id):
     """手动触发单个订阅的爬取"""
