@@ -27,20 +27,22 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 - Currently implemented: `btbtla` plugin for btbtla.com
 
 ### Scheduler
-- APScheduler runs every 6 hours by default to check subscriptions
-- Each subscription can have a custom `interval_cron` (cron expression)
-- Fallback: `DEFAULT_INTERVAL_CRON` from `config.py` ("0 */6 * * *" = every 6 hours)
-- Uses `croniter` library to evaluate cron expressions
+- APScheduler runs on a global cron schedule defined by `DEFAULT_INTERVAL_CRON` in `config.py`
+- Default: `"0 */6 * * *"` (every 6 hours)
+- All active subscriptions are crawled together at each scheduled time
+- Network errors retry up to `FETCH_RETRY_COUNT` times (default: 3)
 
 ### Database Models
 - `Subscription` model in `app/database/models.py`
-- Key fields: `media_type`, `media_name`, `media_id`, `source_plugin`, `current_episode`, `search_keywords`, `interval_cron`
-- `Setting` model (key-value) for persisting app settings like `default_interval_cron`
+- Key fields: `media_type`, `media_name`, `media_id`, `source_plugin`, `current_episode`, `search_keywords`
+- `Setting` model (key-value) for persisting app settings like `default_interval_cron` and `fetch_retry_count`
 
 ### API Structure
 - REST API via Flask Blueprints in `app/api/routes.py`
 - Web UI via Blueprints in `app/web/routes.py`
 - API endpoints prefixed with `/api/`
+- `POST /api/fetch-all` - Trigger crawl for all subscriptions (returns task_id)
+- `GET /api/fetch-all/<task_id>` - Poll task status
 
 ### Frontend
 - Tailwind CSS v3 (Play CDN) + Vanilla JS
@@ -50,9 +52,10 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 - Templates use Jinja2 inheritance
 
 ## Cron Schedule Feature
-- Per-subscription cron expressions stored in `Subscription.interval_cron`
-- Global default in `config.Config.DEFAULT_INTERVAL_CRON`
-- Settings page at `/settings` for configuring global default
+- Global cron expression in `config.Config.DEFAULT_INTERVAL_CRON` ("0 */6 * * *" = every 6 hours)
+- Retry count configurable via `config.Config.FETCH_RETRY_COUNT` (default: 3)
+- Settings page at `/settings` for configuring global default and retry count
+- Manual trigger button on settings page triggers crawl immediately (polling for status)
 
 ## Critical Implementation Details
 

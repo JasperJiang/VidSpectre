@@ -32,7 +32,8 @@ vid spectre/
 │   │   └── routes.py
 │   ├── core/
 │   │   ├── __init__.py
-│   │   └── checker.py       # 更新检查逻辑
+│   │   ├── checker.py       # 更新检查逻辑
+│   │   └── task_manager.py # 任务状态跟踪
 │   ├── scheduler/
 │   │   ├── __init__.py
 │   │   └── tasks.py         # APScheduler任务
@@ -86,7 +87,8 @@ vid spectre/
 - `GET /api/search` - 搜索媒体
 - `GET /api/plugins` - 插件列表
 - `POST /api/subscriptions/<id>/fetch` - 立即爬取单个订阅
-- `PUT /api/subscriptions/<id>/interval` - 更新爬取周期
+- `POST /api/fetch-all` - 触发所有订阅爬取（返回 task_id）
+- `GET /api/fetch-all/<task_id>` - 轮询任务状态
 - `GET /api/download-link` - 获取磁力链接
 
 ### 4. Web UI (Task 6)
@@ -195,6 +197,15 @@ uv run python run.py
 - **操作菜单**：主操作"爬取"外露，次要操作（保存/编辑/删除）收到"更多"下拉菜单
 - **二级展开交互**：点击集数展开显示所有资源链接，再点击链接获取磁力
 - **相关文件**：`templates/*.html`、`static/js/app.js`
+
+### 16. 统一调度 + 手动触发
+- **移除 per-subscription 周期配置**：不再支持每个订阅单独设置爬取周期，统一使用全局 cron 表达式
+- **新增全局配置**：`fetch_retry_count` 设置失败重试次数（默认3次）
+- **新增手动触发**：设置页面添加"手动触发"按钮，点击后轮询任务状态，右下角 toast 通知结果
+- **新增 API**：`POST /api/fetch-all`（创建任务）、`GET /api/fetch-all/<task_id>`（轮询状态）
+- **新增任务管理器**：`app/core/task_manager.py` 实现 `TaskManager` 和 `FetchTask` 类
+- **重试逻辑**：网络错误（超时、连接错误）自动重试 N 次，业务错误直接跳过
+- **相关文件**：`app/core/task_manager.py`、`app/scheduler/tasks.py`、`app/api/routes.py`、`templates/settings.html`
 
 ## 待完成功能
 
