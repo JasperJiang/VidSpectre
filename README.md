@@ -8,14 +8,15 @@
 - **Web 管理界面**：订阅列表、添加/删除、搜索
 - **集数追踪**：标记当前看到第几集
 - **关键字过滤**：按资源质量筛选（2160p、HDR、杜比等）
-- **定时检查**：自动检测订阅更新
+- **定时检查**：按全局周期自动检测所有订阅更新
+- **手动触发**：可随时手动触发爬取
 - **磁力链接获取**：一键获取下载链接
 
 ## 技术栈
 
 - Python 3.x + Flask + SQLite + SQLAlchemy
 - APScheduler（定时任务）
-- Bootstrap 5 + Vanilla JS（前端）
+- Tailwind CSS v3 + Vanilla JS（前端，移动端优先）
 
 ## 快速开始
 
@@ -40,7 +41,7 @@ uv run python run.py --port 5003 # 指定端口
 ```bash
 # 构建并运行
 docker build -t vidspectre .
-docker run -d -p 5002:5002 -v ./storage:/app/storage vidspectre
+docker run -d -p 5002:5002 -v ./storage:/app/storage --name vidspectre vidspectre
 
 # 或使用 docker-compose
 docker-compose up --build
@@ -69,7 +70,7 @@ docker-compose up --build
 
 ### 设置爬取周期
 
-展开剧集后，可为单个订阅设置检查周期。也可以在「设置」页面修改全局默认周期。
+在「设置」页面可配置全局爬取周期和失败重试次数。也支持随时「手动触发」爬取所有订阅。
 
 ## 项目结构
 
@@ -100,8 +101,9 @@ VidSpectre/
 | DELETE | `/api/subscriptions/<id>` | 删除订阅 |
 | PUT | `/api/subscriptions/<id>` | 更新订阅 |
 | GET | `/api/subscriptions/<id>/episodes` | 获取剧集列表 |
-| POST | `/api/subscriptions/<id>/fetch` | 立即爬取 |
-| PUT | `/api/subscriptions/<id>/interval` | 更新爬取周期 |
+| POST | `/api/subscriptions/<id>/fetch` | 立即爬取单个订阅 |
+| POST | `/api/fetch-all` | 触发所有订阅爬取（返回 task_id） |
+| GET | `/api/fetch-all/<task_id>` | 轮询爬取任务状态 |
 | GET | `/api/download-link` | 获取磁力链接 |
 | GET | `/api/search` | 搜索媒体 |
 
@@ -110,4 +112,5 @@ VidSpectre/
 - 默认端口为 5002（避免与 AirPlay 冲突）
 - `media_id` 必须正确设置，否则无法展开剧集
 - 使用 `uv` 管理 Python 依赖
-- Settings 页面设置的默认爬取周期会持久化保存到数据库
+- 所有订阅使用统一的爬取周期，在「设置」页面配置
+- Docker 部署时需挂载 `./storage:/app/storage` 以持久化数据
