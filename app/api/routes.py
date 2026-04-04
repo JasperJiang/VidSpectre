@@ -4,7 +4,9 @@ from app import db
 from app.database.models import Subscription
 from plugins.registry import registry
 from config import Config
+from app.core.task_manager import TaskManager
 from app.core.checker import _fetch_and_update_subscription
+from datetime import datetime
 import asyncio
 
 @api_bp.route("/subscriptions", methods=["GET"])
@@ -202,3 +204,44 @@ def get_download_link():
             return jsonify({"error": "No magnet link found"}), 404
     else:
         return jsonify({"error": "Plugin doesn't support magnet links"}), 501
+
+@api_bp.route("/fetch-all", methods=["POST"])
+def trigger_fetch_all():
+    """手动触发所有订阅的爬取"""
+    task_id = TaskManager.create_task()
+    task = TaskManager.get_task(task_id)
+
+    subscriptions = Subscription.query.filter_by(status='active').all()
+    task.total = len(subscriptions)
+
+    for sub in subscriptions:
+        try:
+            updated, latest = _fetch_and_update_subscription(sub)
+            task.results.append({
+                "subscription_id": sub.id,
+                "name": sub.media_name,
+                "status": "success" if updated else "no_update",
+                "latest_episode": str(latest) if latest else None
+            })
+            task.completed += 1
+        except Exception as e:
+            task.results.append({
+                "subscription_id": sub.id,
+                "name": sub.media_name,
+                "status": "error",
+                "error": str(e)
+            })
+            task.failed += 1
+
+    task.status = "completed"
+    task.finished_at = datetime.utcnow()
+
+    return jsonify({"task_id": task_id})
+
+@api_bp.route("/fetch-all/<task_id>", methods=["GET"])
+def get_fetch_all_status(task_id):
+    """获取 fetch-all 任务状态"""
+    task = TaskManager.get_task(task_id)
+    if not task:
+        return jsonify({"error": "Task not found"}), 404
+    return jsonify(task.to_dict())
