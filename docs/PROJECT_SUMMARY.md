@@ -209,6 +209,7 @@ uv run python run.py
 
 ### 17. Docker VOLUME 声明
 - Dockerfile 添加 `VOLUME ["/app/storage"]` 声明，明确持久化存储挂载点
+- 改用 `.venv/bin/gunicorn` 直接启动，避免每次运行检查 Python 包更新
 
 ## 待完成功能
 
