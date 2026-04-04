@@ -217,41 +217,6 @@ function initDeleteForms() {
     });
 }
 
-function initIntervalSelectors() {
-    document.querySelectorAll('.interval-select').forEach(select => {
-        select.addEventListener('change', function() {
-            const subId = this.dataset.subId;
-            const customInput = document.querySelector(`.custom-cron[data-sub-id="${subId}"]`);
-            const wrapper = customInput ? customInput.parentElement : null;
-
-            if (this.value === 'custom') {
-                wrapper && wrapper.classList.remove('hidden');
-                customInput && customInput.focus();
-            } else {
-                wrapper && wrapper.classList.add('hidden');
-                saveInterval(subId, this.value);
-            }
-        });
-    });
-
-    document.querySelectorAll('.custom-cron').forEach(input => {
-        input.addEventListener('blur', function() {
-            const subId = this.dataset.subId;
-            if (this.value.trim()) {
-                saveInterval(subId, this.value.trim());
-            }
-        });
-    });
-}
-
-function saveInterval(subId, cron) {
-    fetch(`/api/subscriptions/${subId}/interval`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ interval_cron: cron })
-    }).catch(err => console.error('Failed to save interval:', err));
-}
-
 function initMoreMenus() {
     document.querySelectorAll('.more-menu-btn').forEach(btn => {
         btn.addEventListener('click', function(e) {
@@ -328,7 +293,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initFetchButtons();
     initEpisodeToggles();
     initDeleteForms();
-    initIntervalSelectors();
     initMoreMenus();
     initSearchKeyword();
 });
