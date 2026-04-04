@@ -16,7 +16,7 @@ VidSpectre 是一个影视订阅爬取应用，采用插件式架构，支持：
 - **后端**: Python 3.x + Flask + SQLite + SQLAlchemy
 - **调度**: APScheduler
 - **爬虫**: requests + BeautifulSoup
-- **前端**: Bootstrap 5 + Vanilla JS
+- **前端**: Tailwind CSS v3 (Play CDN) + Vanilla JS
 
 ## 项目结构
 
@@ -56,7 +56,9 @@ vid spectre/
 │   ├── subscription.html
 │   ├── edit_subscription.html
 │   └── settings.html
-├── static/css/main.css
+├── static/
+│   └── js/
+│       └── app.js           # 前端JavaScript
 ├── config.py
 ├── requirements.txt
 └── run.py
@@ -184,6 +186,15 @@ uv run python run.py
 - **展开按钮改进**：移除缓存检查，每次点击展开都重新获取剧集列表（之前只在首次展开时获取）
 - **关闭按钮（×）修复**：添加全局点击事件处理，使剧集列表的关闭按钮正常工作
 - **相关文件**：`templates/base.html`、`templates/index.html`
+
+### 15. 前端移动端重构
+- **框架迁移**：从 Bootstrap 5 迁移到 Tailwind CSS v3 (Play CDN)
+- **深色主题**：统一的深色主题，`<html class="dark">` + Tailwind dark mode
+- **移动端优先**：响应式设计，卡片布局替代表格，移动端全宽显示
+- **JavaScript 重构**：提取到 `static/js/app.js`，使用 `addEventListener` 替代内联 onclick
+- **操作菜单**：主操作"爬取"外露，次要操作（保存/编辑/删除）收到"更多"下拉菜单
+- **二级展开交互**：点击集数展开显示所有资源链接，再点击链接获取磁力
+- **相关文件**：`templates/*.html`、`static/js/app.js`
 
 ## 待完成功能
 

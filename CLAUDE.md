@@ -43,8 +43,10 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 - API endpoints prefixed with `/api/`
 
 ### Frontend
-- Bootstrap 5 + Vanilla JS
-- Global JS functions in `templates/base.html` (inline onclick handlers, not addEventListener in DOMContentLoaded)
+- Tailwind CSS v3 (Play CDN) + Vanilla JS
+- Mobile-first responsive design with dark theme
+- JavaScript extracted to `static/js/app.js` using addEventListener
+- Card layout (not table) for subscription list
 - Templates use Jinja2 inheritance
 
 ## Cron Schedule Feature
