@@ -114,43 +114,70 @@ function renderEpisodes(episodes, subId) {
         return;
     }
     const sorted = Object.keys(episodes).sort((a, b) => b - a);
-    let html = '<div class="space-y-3">';
+    let html = '<div class="space-y-2">';
     sorted.forEach(ep => {
-        const links = episodes[ep];
         html += `
-        <div class="border-b border-gray-700 pb-2">
-            <div class="flex justify-between items-center">
+        <div class="episode-item border border-gray-700 rounded-lg overflow-hidden">
+            <button class="episode-header w-full text-left px-4 py-3 bg-gray-700 hover:bg-gray-650 flex justify-between items-center"
+                    data-episode="${escapeHtml(ep)}">
                 <span class="font-medium">第${escapeHtml(ep)}集</span>
-                <button class="get-magnet-link text-blue-400 hover:text-blue-300 text-sm"
-                        data-url="${escapeHtml(links[0].url)}"
-                        data-title="${escapeHtml(links[0].title.substring(0, 30))}">
-                    获取
-                </button>
-            </div>
+                <span class="text-gray-400 text-sm">${episodes[ep].length} 个资源 ▾</span>
+            </button>
+            <div class="episode-links hidden p-3 bg-gray-750 space-y-2"></div>
         </div>`;
     });
     html += '</div>';
     content.innerHTML = html;
 
-    content.querySelectorAll('.get-magnet-link').forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            this.textContent = '获取中...';
-            fetch('/api/download-link?url=' + encodeURIComponent(this.dataset.url))
-                .then(r => r.json())
-                .then(d => {
-                    if (d.magnet) {
-                        prompt('磁力链接:', d.magnet);
-                        this.textContent = '获取';
-                    } else {
-                        alert('获取失败');
-                        this.textContent = this.dataset.title;
-                    }
-                })
-                .catch(() => {
-                    alert('获取失败');
-                    this.textContent = '获取';
-                });
+    // Bind click events for episode headers
+    content.querySelectorAll('.episode-header').forEach(header => {
+        header.addEventListener('click', function() {
+            const ep = this.dataset.episode;
+            const linksContainer = this.nextElementSibling;
+
+            if (linksContainer.classList.contains('hidden')) {
+                // Expand this episode's links
+                linksContainer.classList.remove('hidden');
+                this.querySelector('span:last-child').textContent = '收起 △';
+
+                // Only render links if not already rendered
+                if (!linksContainer.dataset.rendered) {
+                    linksContainer.innerHTML = episodes[ep].map(link => `
+                        <button class="get-magnet-link w-full text-left px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-blue-400 hover:text-blue-300"
+                                data-url="${escapeHtml(link.url)}"
+                                data-title="${escapeHtml(link.title)}">
+                            ${escapeHtml(link.title)}
+                        </button>
+                    `).join('');
+                    linksContainer.dataset.rendered = 'true';
+
+                    // Bind click events for links
+                    linksContainer.querySelectorAll('.get-magnet-link').forEach(linkBtn => {
+                        linkBtn.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            this.textContent = '获取中...';
+                            fetch('/api/download-link?url=' + encodeURIComponent(this.dataset.url))
+                                .then(r => r.json())
+                                .then(d => {
+                                    if (d.magnet) {
+                                        prompt('磁力链接:', d.magnet);
+                                    } else {
+                                        alert('获取失败');
+                                    }
+                                    this.textContent = this.dataset.title;
+                                })
+                                .catch(() => {
+                                    alert('获取失败');
+                                    this.textContent = this.dataset.title;
+                                });
+                        });
+                    });
+                }
+            } else {
+                // Collapse
+                linksContainer.classList.add('hidden');
+                this.querySelector('span:last-child').textContent = `${episodes[ep].length} 个资源 ▾`;
+            }
         });
     });
 }
