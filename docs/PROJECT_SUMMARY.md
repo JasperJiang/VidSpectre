@@ -205,6 +205,7 @@ uv run python run.py
 - **新增 API**：`POST /api/fetch-all`（创建任务）、`GET /api/fetch-all/<task_id>`（轮询状态）
 - **新增任务管理器**：`app/core/task_manager.py` 实现 `TaskManager` 和 `FetchTask` 类
 - **重试逻辑**：网络错误（超时、连接错误）自动重试 N 次，业务错误直接跳过
+- **Bug 修复**：修改定时设置后正确重新调度 APScheduler 任务（添加 `reschedule_job()` 函数）
 - **相关文件**：`app/core/task_manager.py`、`app/scheduler/tasks.py`、`app/api/routes.py`、`templates/settings.html`
 
 ### 17. Docker VOLUME 声明
