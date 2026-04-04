@@ -73,6 +73,7 @@ vid spectre/
 - 实现详情页解析（提取集数、资源列表）
 - 资源列表直接从详情页解析，按集数分组
 - 磁力链接需访问 /tdown/ 页面获取
+- **Bug修复**: 搜索URL格式和CSS选择器（`.module-item`）
 
 ### 3. REST API (Task 5)
 - `GET /api/subscriptions` - 列表
@@ -111,6 +112,11 @@ vid spectre/
 - 前端在表头"关键字"列显示 **?** 帮助按钮（Bootstrap Tooltip）
 - 多个关键字用逗号分隔
 - 过滤逻辑：资源标题必须包含所有关键字才显示
+
+### 9. 搜索功能Bug修复
+- btbtla 搜索 URL 格式修复（`/search/{keyword}` 而非 `/search?keyword=...`）
+- CSS 选择器修复（`.module-item` 匹配实际页面结构）
+- 清理无法执行的死代码
 
 ## 设计决策
 
