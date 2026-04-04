@@ -149,18 +149,21 @@ window.fetchSubscription = function(btn) {
     btn.disabled = true;
     btn.textContent = '...';
 
-    fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' })
+    // 1. 先保存当前行的修改
+    saveSubscription(subId)
+        .then(() => {
+            // 2. 然后调用刷新API
+            return fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' });
+        })
         .then(response => response.json())
         .then(data => {
-            btn.disabled = false;
-            btn.textContent = '✓';
-            // 更新最新集数显示
-            if (data.latest_episode) {
-                const row = btn.closest('tr');
-                const cells = row.querySelectorAll('td');
-                if (cells[4]) cells[4].textContent = data.latest_episode;
+            // 3. 更新页面上最新集数的显示
+            const row = btn.closest('tr');
+            const cells = row.querySelectorAll('td');
+            if (data.latest_episode && cells[4]) {
+                cells[4].textContent = data.latest_episode;
             }
-            // 如果剧集列表已展开，刷新它
+            // 4. 如果剧集列表已展开，刷新它
             const episodesContent = document.getElementById('episodes-content-' + subId);
             const episodesRow = document.getElementById('episodes-' + subId);
             if (episodesContent && episodesRow && episodesRow.style.display !== 'none') {
@@ -183,11 +186,15 @@ window.fetchSubscription = function(btn) {
                         }
                     });
             }
-            setTimeout(() => btn.textContent = '🔄', 1500);
+        })
+        .then(() => {
+            btn.textContent = '✓';
         })
         .catch(() => {
-            btn.disabled = false;
             btn.textContent = '✗';
+        })
+        .finally(() => {
+            btn.disabled = false;
             setTimeout(() => btn.textContent = '🔄', 1500);
         });
 }
@@ -195,12 +202,11 @@ window.fetchSubscription = function(btn) {
 window.saveSubscription = function(subId) {
     const episodeInput = document.querySelector(`.episode-input[data-sub-id="${subId}"]`);
     const keywordsInput = document.querySelector(`.keywords-input[data-sub-id="${subId}"]`);
-    const saveBtn = document.querySelector(`.save-btn[data-sub-id="${subId}"]`);
 
     const currentEpisode = episodeInput ? episodeInput.value.trim() : '';
     const searchKeywords = keywordsInput ? keywordsInput.value.trim() : '';
 
-    fetch(`/api/subscriptions/${subId}`, {
+    return fetch(`/api/subscriptions/${subId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ current_episode: currentEpisode, search_keywords: searchKeywords })
@@ -278,9 +284,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 row.style.display = 'table-row';
                 this.textContent = '收起剧集';
 
-                // Only fetch if not already loaded
-                if (content.innerHTML === '') {
-                    fetch(`/api/subscriptions/${subId}/episodes`)
+                // Always re-fetch episodes on each expand click
+                fetch(`/api/subscriptions/${subId}/episodes`)
                         .then(response => response.json())
                         .then(episodes => {
                             loading.style.display = 'none';
@@ -341,7 +346,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         .catch(err => {
                             loading.textContent = '加载失败';
                         });
-                }
             } else {
                 row.style.display = 'none';
                 this.textContent = '展开剧集';

@@ -40,21 +40,60 @@ function fetchSubscription(btn) {
     const subId = btn.dataset.subId;
     btn.disabled = true;
     btn.textContent = '...';
-    fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' })
-        .then(r => r.json()).then(d => {
-            btn.disabled = false;
+
+    // 1. 先保存当前行的修改
+    saveSubscription(subId)
+        .then(() => {
+            // 2. 然后调用刷新API
+            return fetch(`/api/subscriptions/${subId}/fetch`, { method: 'POST' });
+        })
+        .then(response => response.json())
+        .then(data => {
+            // 3. 更新页面上最新集数的显示
+            const row = btn.closest('tr');
+            const cells = row.querySelectorAll('td');
+            if (data.latest_episode && cells[4]) {
+                cells[4].textContent = data.latest_episode;
+            }
+            // 4. 如果剧集列表已展开，刷新它
+            const episodesContent = document.getElementById('episodes-content-' + subId);
+            const episodesRow = document.getElementById('episodes-' + subId);
+            if (episodesContent && episodesRow && episodesRow.style.display !== 'none') {
+                episodesContent.innerHTML = '';
+                const loading = episodesRow.querySelector('.episodes-loading');
+                if (loading) loading.style.display = 'block';
+                fetch(`/api/subscriptions/${subId}/episodes`)
+                    .then(r => r.json())
+                    .then(episodes => {
+                        if (loading) loading.style.display = 'none';
+                        if (Object.keys(episodes).length === 0) {
+                            episodesContent.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
+                        } else {
+                            const sorted = Object.keys(episodes).sort((a,b)=>b-a);
+                            episodesContent.innerHTML = '<div class="episode-items">' + sorted.map(ep =>
+                                `<div class="episode-item mb-2"><strong>第${ep}集</strong><div class="ms-2">` +
+                                episodes[ep].map(link => `<a href="${link.url}" class="me-2" target="_blank">${link.type === 'magnet' ? '磁力' : '种子'}</a>`).join('') +
+                                '</div></div>'
+                            ).join('') + '</div>';
+                        }
+                    });
+            }
+        })
+        .then(() => {
             btn.textContent = '✓';
-            setTimeout(() => btn.textContent = '🔄', 1500);
-        }).catch(() => {
-            btn.disabled = false;
+        })
+        .catch(() => {
             btn.textContent = '✗';
+        })
+        .finally(() => {
+            btn.disabled = false;
             setTimeout(() => btn.textContent = '🔄', 1500);
         });
 }
 function saveSubscription(subId) {
     const ep = document.querySelector('.episode-input[data-sub-id="'+subId+'"]');
     const kw = document.querySelector('.keywords-input[data-sub-id="'+subId+'"]');
-    fetch(`/api/subscriptions/${subId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({current_episode:ep?ep.value:'',search_keywords:kw?kw.value:''}) }).then(r=>r.json()).then(d=>{if(ep){ep.classList.add('border-success');setTimeout(()=>ep.classList.remove('border-success'),1000)}if(kw){kw.classList.add('border-success');setTimeout(()=>kw.classList.remove('border-success'),1000)}});
+    return fetch(`/api/subscriptions/${subId}`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({current_episode:ep?ep.value:'',search_keywords:kw?kw.value:''}) }).then(r=>r.json()).then(d=>{if(ep){ep.classList.add('border-success');setTimeout(()=>ep.classList.remove('border-success'),1000)}if(kw){kw.classList.add('border-success');setTimeout(()=>kw.classList.remove('border-success'),1000)}});
 }
 function toggleEpisodes(btn) {
     const subId = btn.dataset.subId;
@@ -64,39 +103,51 @@ function toggleEpisodes(btn) {
     if (row && row.style.display === 'none') {
         row.style.display = 'table-row';
         btn.textContent = '收起';
-        if (content && content.innerHTML === '') {
-            fetch(`/api/subscriptions/${subId}/episodes`).then(r=>r.json()).then(episodes=>{
-                loading.style.display = 'none';
-                if (Object.keys(episodes).length === 0) {
-                    content.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
-                } else {
-                    const sorted = Object.keys(episodes).sort((a,b)=>b-a);
-                    let html = '<div class="row">';
-                    sorted.forEach(ep => {
-                        const links = episodes[ep];
-                        html += '<div class="col-md-4 mb-2"><strong>第'+ep+'集</strong><ul class="list-unstyled ms-3">';
-                        links.forEach(link => {
-                            html += '<li class="episode-link-item"><a href="#" class="get-magnet-link text-decoration-none" data-url="'+link.url+'" data-title="'+link.title.substring(0,30)+'...">'+link.title.substring(0,40)+'...</a></li>';
-                        });
-                        html += '</ul></div>';
+
+        // Always re-fetch episodes on each expand click
+        fetch(`/api/subscriptions/${subId}/episodes`).then(r=>r.json()).then(episodes=>{
+            if (loading) loading.style.display = 'none';
+            if (Object.keys(episodes).length === 0) {
+                content.innerHTML = '<p class="text-muted">暂无可用剧集</p>';
+            } else {
+                const sorted = Object.keys(episodes).sort((a,b)=>b-a);
+                let html = '<div class="row">';
+                sorted.forEach(ep => {
+                    const links = episodes[ep];
+                    html += '<div class="col-md-4 mb-2"><strong>第'+ep+'集</strong><ul class="list-unstyled ms-3">';
+                    links.forEach(link => {
+                        html += '<li class="episode-link-item"><a href="#" class="get-magnet-link text-decoration-none" data-url="'+link.url+'" data-title="'+link.title.substring(0,30)+'...">'+link.title.substring(0,40)+'...</a></li>';
                     });
-                    html += '</div>';
-                    content.innerHTML = html;
-                    content.querySelectorAll('.get-magnet-link').forEach(link => {
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            this.textContent = '获取中...';
-                            fetch('/api/download-link?url='+encodeURIComponent(this.dataset.url)).then(r=>r.json()).then(d=>{if(d.magnet){prompt('磁力链接:',d.magnet)}else{alert('获取失败');this.textContent=this.dataset.title}}).catch(()=>{alert('获取失败');this.textContent=this.dataset.title});
-                        });
+                    html += '</ul></div>';
+                });
+                html += '</div>';
+                content.innerHTML = html;
+                content.querySelectorAll('.get-magnet-link').forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        this.textContent = '获取中...';
+                        fetch('/api/download-link?url='+encodeURIComponent(this.dataset.url)).then(r=>r.json()).then(d=>{if(d.magnet){prompt('磁力链接:',d.magnet)}else{alert('获取失败');this.textContent=this.dataset.title}}).catch(()=>{alert('获取失败');this.textContent=this.dataset.title});
                     });
-                }
-            }).catch(err=>{loading.textContent='加载失败'});
-        }
+                });
+            }
+        }).catch(err=>{if(loading) loading.textContent='加载失败'});
     } else if (row) {
         row.style.display = 'none';
         btn.textContent = '展开';
     }
 }
+
+// Close episodes button handler
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.close-episodes')) {
+        const btn = e.target.closest('.close-episodes');
+        const subId = btn.dataset.subId;
+        const row = document.getElementById('episodes-' + subId);
+        const toggleBtn = document.querySelector('.toggle-episodes[data-sub-id="' + subId + '"]');
+        if (row) row.style.display = 'none';
+        if (toggleBtn) toggleBtn.textContent = '展开';
+    }
+});
     </script>
     <script>
     // Initialize Bootstrap tooltips
