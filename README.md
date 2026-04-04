@@ -1,0 +1,104 @@
+# VidSpectre
+
+影视订阅爬取应用，支持插件式数据源和 Web 管理界面。
+
+## 功能特点
+
+- **插件式数据源**：支持多个影视资源站，目前实现 btbtla.com
+- **Web 管理界面**：订阅列表、添加/删除、搜索
+- **集数追踪**：标记当前看到第几集
+- **关键字过滤**：按资源质量筛选（2160p、HDR、杜比等）
+- **定时检查**：自动检测订阅更新
+- **磁力链接获取**：一键获取下载链接
+
+## 技术栈
+
+- Python 3.x + Flask + SQLite + SQLAlchemy
+- APScheduler（定时任务）
+- Bootstrap 5 + Vanilla JS（前端）
+
+## 快速开始
+
+### 安装依赖
+
+```bash
+cd /Users/jasper/Documents/Code/VidSpectre
+uv sync
+```
+
+### 启动服务
+
+```bash
+uv run python run.py
+```
+
+访问 http://localhost:5002
+
+### 生产环境
+
+```bash
+uv run gunicorn -w 4 -b 0.0.0.0:5002 run:app
+```
+
+## 使用说明
+
+### 添加订阅
+
+1. 点击「添加订阅」
+2. 选择类型（电影/电视剧）
+3. 输入名称搜索，选择正确的结果
+4. 保存
+
+### 展开剧集
+
+1. 点击订阅行的「展开」按钮
+2. 查看该剧集的所有资源
+3. 点击资源标题获取磁力链接
+
+### 关键字过滤
+
+在「关键字」列输入质量要求，多个关键字用逗号分隔。
+
+例如：`2160p,HDR` 只显示同时满足两者的资源。
+
+### 设置爬取周期
+
+展开剧集后，可为单个订阅设置检查周期。也可以在「设置」页面修改全局默认周期。
+
+## 项目结构
+
+```
+VidSpectre/
+├── app/                    # Flask 应用
+│   ├── api/               # REST API
+│   ├── web/               # Web 界面
+│   ├── core/             # 核心逻辑
+│   ├── scheduler/        # 定时任务
+│   └── database/         # 数据库模型
+├── plugins/               # 插件系统
+│   └── sources/btbtla/   # btbtla 数据源
+├── templates/             # HTML 模板
+├── static/               # 静态资源
+├── config.py             # 配置
+└── run.py               # 启动入口
+```
+
+## API 接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/subscriptions` | 获取订阅列表 |
+| POST | `/api/subscriptions` | 添加订阅 |
+| DELETE | `/api/subscriptions/<id>` | 删除订阅 |
+| PUT | `/api/subscriptions/<id>` | 更新订阅 |
+| GET | `/api/subscriptions/<id>/episodes` | 获取剧集列表 |
+| POST | `/api/subscriptions/<id>/fetch` | 立即爬取 |
+| PUT | `/api/subscriptions/<id>/interval` | 更新爬取周期 |
+| GET | `/api/download-link` | 获取磁力链接 |
+| GET | `/api/search` | 搜索媒体 |
+
+## 注意事项
+
+- 默认端口为 5002（避免与 AirPlay 冲突）
+- `media_id` 必须正确设置，否则无法展开剧集
+- 使用 `uv` 管理 Python 依赖

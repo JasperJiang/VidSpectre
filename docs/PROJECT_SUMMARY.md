@@ -25,27 +25,35 @@ vid spectre/
 ├── app/
 │   ├── __init__.py          # Flask应用工厂
 │   ├── api/                 # REST API
+│   │   ├── __init__.py      # API蓝图定义
 │   │   └── routes.py
 │   ├── web/                 # Web界面
+│   │   ├── __init__.py      # Web蓝图定义
 │   │   └── routes.py
 │   ├── core/
+│   │   ├── __init__.py
 │   │   └── checker.py       # 更新检查逻辑
 │   ├── scheduler/
+│   │   ├── __init__.py
 │   │   └── tasks.py         # APScheduler任务
 │   └── database/
+│       ├── __init__.py
 │       └── models.py        # SQLAlchemy模型
 ├── plugins/                 # 插件系统
+│   ├── __init__.py
 │   ├── interfaces.py        # 插件接口定义
 │   ├── loader.py            # 插件加载器
 │   ├── registry.py          # 插件注册表
 │   └── sources/             # 数据源插件
+│       ├── __init__.py
 │       └── btbtla/
+│           ├── __init__.py
 │           ├── plugin.py    # 插件实现
 │           └── parser.py    # 页面解析
 ├── templates/               # HTML模板
 │   ├── base.html
 │   ├── index.html
-│   └── subscription.html
+│   └── settings.html
 ├── static/css/main.css
 ├── config.py
 ├── requirements.txt
@@ -60,8 +68,9 @@ vid spectre/
 
 ### 2. btbtla 数据源插件 (Task 4)
 - 实现搜索功能（URL: `/search/{keyword}`）
-- 实现详情页解析（提取集数、下载链接）
-- 站点结构：详情页 -> /tdown/ 页面 -> 磁力链接
+- 实现详情页解析（提取集数、资源列表）
+- 资源列表直接从详情页解析，按集数分组
+- 磁力链接需访问 /tdown/ 页面获取
 
 ### 3. REST API (Task 5)
 - `GET /api/subscriptions` - 列表
@@ -71,6 +80,9 @@ vid spectre/
 - `GET /api/subscriptions/<id>/episodes` - 获取剧集列表（支持关键字过滤）
 - `GET /api/search` - 搜索媒体
 - `GET /api/plugins` - 插件列表
+- `POST /api/subscriptions/<id>/fetch` - 立即爬取单个订阅
+- `PUT /api/subscriptions/<id>/interval` - 更新爬取周期
+- `GET /api/download-link` - 获取磁力链接
 
 ### 4. Web UI (Task 6)
 - 订阅列表页面
@@ -90,10 +102,11 @@ vid spectre/
 - 点击"展开"按钮展开剧集列表
 - 按集数分组显示资源
 - 点击资源获取磁力链接
+- 未设置 media_id 的订阅显示 ⚠ 警告图标
 
 ### 8. 搜索关键字功能 (新增)
 - 数据库添加 `search_keywords` 字段
-- 前端在表头"关键字"列显示 **?** 帮助按钮
+- 前端在表头"关键字"列显示 **?** 帮助按钮（Bootstrap Tooltip）
 - 多个关键字用逗号分隔
 - 过滤逻辑：资源标题必须包含所有关键字才显示
 
@@ -106,6 +119,7 @@ vid spectre/
 - 搜索URL：`/search/{keyword}` 而非 `?keyword=`
 - 下载链接不直接显示磁力，需要访问 `/tdown/` 页面获取
 - 集数从下载链接标题中提取（如"第64集"）
+- **重要修复**：从详情页直接解析资源列表（/detail/{id}.html），而不是访问 /tdown/
 
 ### 关键字过滤逻辑
 - 用户输入：`2160p, HDR, 杜比`
@@ -114,7 +128,10 @@ vid spectre/
 
 ### 表头设计
 - 关键字帮助按钮放在表头，避免每个输入框重复
-- 点击弹出 alert 说明用法（简单直接）
+- 使用 Bootstrap Tooltip 展示帮助信息
+
+### 默认端口
+- 开发服务器默认端口从 5000 改为 5002（避免与 AirPlay 冲突）
 
 ## 启动方式
 

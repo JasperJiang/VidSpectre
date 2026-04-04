@@ -18,7 +18,7 @@
                         <th>类型</th>
                         <th>名称</th>
                         <th>当前看到</th>
-                        <th>关键字 <span class="text-muted help-btn" style="cursor: help;">?</span></th>
+                        <th>关键字 <span class="help-btn" style="cursor: help; color: #6c757d;" data-bs-toggle="tooltip" data-bs-placement="top" title="多个关键字用逗号分隔，如: HDR,2160p">?</span></th>
                         <th>最新更新</th>
                         <th>操作</th>
                     </tr>
@@ -36,6 +36,7 @@
                         <td>
                             {{ sub.media_name }}
                             {% if sub.media_type == 'tv' %}
+                                {% if sub.media_id %}
                             <button class="btn btn-sm btn-outline-secondary ms-1 toggle-episodes"
                                     data-sub-id="{{ sub.id }}"
                                     data-media-id="{{ sub.media_id }}"
@@ -43,6 +44,9 @@
                                     onclick="toggleEpisodes(this)">
                                 展开
                             </button>
+                                {% else %}
+                            <span class="text-danger ms-1" style="cursor: help;" data-bs-toggle="tooltip" data-bs-placement="top" title="资源未找到，请在添加订阅时搜索并选择正确的资源">⚠</span>
+                                {% endif %}
                             {% endif %}
                         </td>
                         <td>
@@ -186,13 +190,7 @@ window.saveSubscription = function(subId) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle help button click
-    document.querySelectorAll('.help-btn').forEach(function(btn) {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            alert('关键字帮助：\n\n1. 多个关键字用逗号分隔，如: 2160p,HDR\n2. 资源标题包含所有关键字才会显示\n3. 不区分大小写\n\n示例：\n- 输入 "HDR" 只显示含HDR的资源\n- 输入 "2160p,杜比" 只显示同时包含两者的资源');
-        });
-    });
+    // Help button now uses Bootstrap tooltip (see title attribute)
 
     // Handle unified save button
     document.querySelectorAll('.save-btn').forEach(function(btn) {
