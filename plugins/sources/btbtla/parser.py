@@ -14,11 +14,10 @@ class BtbtlaParser:
 
     def search(self, keyword: str) -> List[MediaItem]:
         """Search for media"""
-        url = f"{BASE_URL}/search"
-        params = {"keyword": keyword}
+        url = f"{BASE_URL}/search/{keyword}"
 
         try:
-            response = self.session.get(url, params=params, timeout=10)
+            response = self.session.get(url, timeout=10)
             response.raise_for_status()
             return self._parse_search_results(response.text)
         except Exception as e:
@@ -30,15 +29,31 @@ class BtbtlaParser:
         items = []
         soup = BeautifulSoup(html, "lxml")
 
-        # Find media items - adjust selector based on actual page structure
-        for item in soup.select(".movie-item, .video-item, .item"):
+        # Find media items - btbtla uses .module-item class
+        for item in soup.select(".module-item"):
             try:
-                title_elem = item.select_one("a.title, .title a, h3 a")
+                # Title link is in .module-item-title
+                title_elem = item.select_one(".module-item-title, .module-item-title a")
+                if not title_elem:
+                    title_elem = item.select_one("a[href^='/detail/']")
                 if not title_elem:
                     continue
 
                 name = title_elem.get_text(strip=True)
-                detail_url = title_elem.get("href", "")
+                if not name:
+                    title_elem = item.select_one("a[href^='/detail/']")
+                    if title_elem:
+                        name = title_elem.get("title", "") or title_elem.get_text(strip=True)
+
+                detail_url = title_elem.get("href", "") if title_elem else ""
+                if not detail_url:
+                    # Try to get href from the link inside module-item-title
+                    link = item.select_one("a[href^='/detail/']")
+                    if link:
+                        detail_url = link.get("href", "")
+
+                if not detail_url:
+                    continue
 
                 # Extract media ID from URL
                 media_id = self._extract_media_id(detail_url)
@@ -48,9 +63,13 @@ class BtbtlaParser:
                 # Get cover image
                 img_elem = item.select_one("img")
                 cover_url = img_elem.get("src") if img_elem else None
+                if cover_url and cover_url.startswith("//"):
+                    cover_url = "https:" + cover_url
 
-                # Determine media type
-                media_type = MediaType.TV if "/tv/" in detail_url else MediaType.MOVIE
+                # Determine media type from URL or page content
+                media_type = MediaType.TV
+                if "/movie/" in detail_url or "/Mv/" in detail_url:
+                    media_type = MediaType.MOVIE
 
                 items.append(MediaItem(
                     media_id=media_id,
@@ -179,50 +198,6 @@ class BtbtlaParser:
                 "url": full_url,
                 "type": res_type
             })
-
-        return episodes
-        soup = BeautifulSoup(html, "lxml")
-        episodes = {}
-
-        # Find all episode sections
-        for ep_block in soup.select(".ep-item, .episode-item, .list-item"):
-            # Extract episode number from title like "第1集" or "第01集"
-            title_elem = ep_block.select_one("h3, h4, .title, .ep-title")
-            if title_elem:
-                title = title_elem.get_text(strip=True)
-                ep_num = self._extract_episode_number(title)
-            else:
-                continue
-
-            # Find all download links in this episode block
-            links = []
-            for link_elem in ep_block.select("a[href^='magnet:'], a[href$='.torrent']"):
-                href = link_elem.get("href", "")
-                link_title = link_elem.get_text(strip=True) or title
-                if href:
-                    links.append({
-                        "title": link_title,
-                        "url": href,
-                        "type": "magnet" if href.startswith("magnet") else "torrent"
-                    })
-
-            if links:
-                episodes[str(ep_num)] = links
-
-        # Fallback: if no episodes found, try to parse as flat list
-        if not episodes:
-            links = []
-            for link_elem in soup.select("a[href^='magnet:'], a[href$='.torrent']"):
-                href = link_elem.get("href", "")
-                title = link_elem.get_text(strip=True)
-                if href:
-                    links.append({
-                        "title": title,
-                        "url": href,
-                        "type": "magnet" if href.startswith("magnet") else "torrent"
-                    })
-            if links:
-                episodes["1"] = links
 
         return episodes
 
