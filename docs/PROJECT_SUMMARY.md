@@ -53,6 +53,8 @@ vid spectre/
 ├── templates/               # HTML模板
 │   ├── base.html
 │   ├── index.html
+│   ├── subscription.html
+│   ├── edit_subscription.html
 │   └── settings.html
 ├── static/css/main.css
 ├── config.py

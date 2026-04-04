@@ -34,12 +34,6 @@ uv run python run.py
 
 访问 http://localhost:5002
 
-### 生产环境
-
-```bash
-uv run gunicorn -w 4 -b 0.0.0.0:5002 run:app
-```
-
 ## 使用说明
 
 ### 添加订阅

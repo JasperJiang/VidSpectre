@@ -68,3 +68,15 @@ The app uses Flask's application factory pattern in `app/__init__.py`:
 - The `Subscription.media_id` field MUST be set for episode listing to work
 - If `media_id` is `None`, the "展开" button will show a ⚠ warning
 - When adding subscriptions via search, ensure `media_id` is properly saved
+
+### Template Files
+Templates are in `../templates` (project root):
+- `index.html` - Subscription list page
+- `subscription.html` - Add subscription page (with search)
+- `edit_subscription.html` - Edit subscription page
+- `settings.html` - Global settings page
+- `base.html` - Base template with shared layout and JS
+
+### Database
+- SQLite database at `storage/vidspectre.db`
+- This file is gitignored and should NOT be committed

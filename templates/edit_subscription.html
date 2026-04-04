@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}编辑订阅 - VidSpectre{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4>编辑订阅</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label class="form-label">名称</label>
+                        <input type="text" class="form-control" value="{{ subscription.media_name }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">类型</label>
+                        <input type="text" class="form-control" value="{{ '电影' if subscription.media_type == 'movie' else '电视剧' }}" readonly>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">当前看到</label>
+                        <input type="text" name="current_episode" class="form-control" value="{{ subscription.current_episode or '' }}" placeholder="例如：第10集">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">保存</button>
+                        <a href="{{ url_for('web.index') }}" class="btn btn-secondary">取消</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
