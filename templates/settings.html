@@ -4,7 +4,7 @@
 
 {% block content %}
 <!-- Toast 容器 -->
-<div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2"></div>
+<div id="toast-container" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 space-y-2"></div>
 
 <div class="max-w-xl mx-auto">
     <div class="bg-gray-800 rounded-lg border border-gray-700">
@@ -78,8 +78,8 @@
 .toast-error { background: #dc2626; }
 .toast-info { background: #2563eb; }
 @keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from { transform: translate(-50%, -20px); opacity: 0; }
+    to { transform: translate(-50%, 0); opacity: 1; }
 }
 @keyframes fadeOut {
     from { opacity: 1; }
