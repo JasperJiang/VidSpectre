@@ -3,6 +3,7 @@ from app.web import web_bp
 from app import db
 from app.database.models import Subscription, Setting
 from config import Config
+from app.scheduler.tasks import reschedule_job
 
 @web_bp.route("/")
 def index():
@@ -91,6 +92,8 @@ def settings():
         # 更新内存中的值
         Config.DEFAULT_INTERVAL_CRON = default_cron
         Config.FETCH_RETRY_COUNT = int(fetch_retry_count)
+        # 重新调度任务
+        reschedule_job()
         return redirect(url_for("web.settings"))
 
     # 获取 fetch_retry_count
