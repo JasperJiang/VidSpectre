@@ -110,30 +110,6 @@
                 <div class="episodes-loading text-gray-400">加载中...</div>
                 <div id="episodes-content-{{ sub.id }}"></div>
 
-                <!-- Interval Selector -->
-                <div class="mt-4 pt-4 border-t border-gray-600">
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <label class="text-sm text-gray-400">爬取周期:</label>
-                        <select class="interval-select bg-gray-700 border border-gray-600 rounded px-3 py-1.5 text-sm"
-                                data-sub-id="{{ sub.id }}">
-                            <option value="0 * * * *" {% if sub.interval_cron=='0 * * * *' %}selected{% endif %}>每小时</option>
-                            <option value="0 */6 * * *" {% if sub.interval_cron=='0 */6 * * *' %}selected{% endif %}>每6小时</option>
-                            <option value="0 */12 * * *" {% if sub.interval_cron=='0 */12 * * *' %}selected{% endif %}>每12小时</option>
-                            <option value="0 9 * * *" {% if sub.interval_cron=='0 9 * * *' %}selected{% endif %}>每天早上9点</option>
-                            <option value="0 9,21 * * *" {% if sub.interval_cron=='0 9,21 * * *' %}selected{% endif %}>每天两次</option>
-                            <option value="0 9 * * 1,3,5" {% if sub.interval_cron=='0 9 * * 1,3,5' %}selected{% endif %}>每周一三五四</option>
-                            <option value="custom" {% if sub.interval_cron and sub.interval_cron not in ['0 * * * *','0 */6 * * *','0 */12 * * *','0 9 * * *','0 9,21 * * *','0 9 * * 1,3,5'] %}selected{% endif %}>自定义</option>
-                        </select>
-                        <input type="text"
-                               class="custom-cron hidden bg-gray-700 border border-gray-600 rounded px-2 py-1.5 text-sm w-32"
-                               data-sub-id="{{ sub.id }}"
-                               value="{{ sub.interval_cron or default_cron }}"
-                               placeholder="0 */6 * * *">
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endif %}
     </div>
     {% endfor %}
 </div>
