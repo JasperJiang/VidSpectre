@@ -207,6 +207,9 @@ uv run python run.py
 - **重试逻辑**：网络错误（超时、连接错误）自动重试 N 次，业务错误直接跳过
 - **相关文件**：`app/core/task_manager.py`、`app/scheduler/tasks.py`、`app/api/routes.py`、`templates/settings.html`
 
+### 17. Docker VOLUME 声明
+- Dockerfile 添加 `VOLUME ["/app/storage"]` 声明，明确持久化存储挂载点
+
 ## 待完成功能
 
 1. 通知推送插件（预留接口，未实现）
