@@ -15,6 +15,8 @@ The app runs on port 5002 by default. If port 5002 is in use (common with AirPla
 
 - **Run dev server**: `uv run python run.py` (uses Flask debug mode)
 - **Production server**: `uv run gunicorn -w 4 -b 0.0.0.0:5002 run:app`
+- **Docker**: `docker build -t vidspectre . && docker run -d -p 5002:5002 -v ./storage:/app/storage vidspectre`
+- **Docker Compose**: `docker-compose up --build`
 
 ## Architecture
 

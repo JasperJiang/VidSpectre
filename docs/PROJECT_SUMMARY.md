@@ -118,6 +118,13 @@ vid spectre/
 - CSS 选择器修复（`.module-item` 匹配实际页面结构）
 - 清理无法执行的死代码
 
+### 10. Docker 支持
+- 添加 Dockerfile（基于 python:3.13-slim + uv）
+- 添加 docker-compose.yml
+- 添加 .dockerignore
+- 添加缺失的 croniter 依赖到 pyproject.toml
+- gunicorn 使用 --preload 避免多 worker 竞态问题
+
 ## 设计决策
 
 ### 为什么用 uv？

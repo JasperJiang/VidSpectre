@@ -1,0 +1,10 @@
+services:
+  vidspectre:
+    build: .
+    ports:
+      - "5002:5002"
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - SECRET_KEY=your-secret-key-here
+    restart: unless-stopped
