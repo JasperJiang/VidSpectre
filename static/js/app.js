@@ -3,12 +3,20 @@
  * Uses Tailwind CSS + vanilla JavaScript
  */
 
+// Helper to escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // Global functions exposed on window
 window.fetchSubscription = fetchSubscription;
 window.saveSubscription = saveSubscription;
 window.toggleEpisodes = toggleEpisodes;
 
 function fetchSubscription(btn) {
+    if (btn.disabled) return;  // Guard against double-click
     const subId = btn.dataset.subId;
     btn.disabled = true;
     btn.textContent = '...';
@@ -66,6 +74,11 @@ function saveSubscription(subId) {
             keywordsInput.classList.add('border-green-500');
             setTimeout(() => keywordsInput.classList.remove('border-green-500'), 1000);
         }
+    })
+    .catch(err => {
+        console.error('Failed to save subscription:', err);
+        if (episodeInput) episodeInput.classList.add('border-red-500');
+        if (keywordsInput) keywordsInput.classList.add('border-red-500');
     });
 }
 
@@ -107,10 +120,10 @@ function renderEpisodes(episodes, subId) {
         html += `
         <div class="border-b border-gray-700 pb-2">
             <div class="flex justify-between items-center">
-                <span class="font-medium">第${ep}集</span>
+                <span class="font-medium">第${escapeHtml(ep)}集</span>
                 <button class="get-magnet-link text-blue-400 hover:text-blue-300 text-sm"
-                        data-url="${links[0].url}"
-                        data-title="${links[0].title.substring(0, 30)}">
+                        data-url="${escapeHtml(links[0].url)}"
+                        data-title="${escapeHtml(links[0].title.substring(0, 30))}">
                     获取
                 </button>
             </div>
@@ -209,7 +222,7 @@ function saveInterval(subId, cron) {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ interval_cron: cron })
-    });
+    }).catch(err => console.error('Failed to save interval:', err));
 }
 
 function initMoreMenus() {
@@ -260,7 +273,14 @@ function searchMedia() {
                 const badge = item.media_type === 'movie' ? '电影' : '电视剧';
                 const div = document.createElement('div');
                 div.className = 'p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700';
-                div.innerHTML = `<span class="font-medium">${item.name}</span> <span class="text-xs bg-gray-600 px-2 py-1 rounded">${badge}</span>`;
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'font-medium';
+                nameSpan.textContent = item.name;
+                const badgeSpan = document.createElement('span');
+                badgeSpan.className = 'text-xs bg-gray-600 px-2 py-1 rounded';
+                badgeSpan.textContent = badge;
+                div.appendChild(nameSpan);
+                div.appendChild(badgeSpan);
                 div.addEventListener('click', function() {
                     document.querySelector('input[name="media_name"]').value = item.name;
                     document.querySelector('input[name="media_id"]').value = item.media_id;
