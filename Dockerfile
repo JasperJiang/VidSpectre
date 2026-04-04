@@ -15,6 +15,9 @@ COPY . .
 # 创建存储目录
 RUN mkdir -p storage
 
+# 声明挂载点（需在运行容器时挂载以持久化数据）
+VOLUME ["/app/storage"]
+
 # 暴露端口
 EXPOSE 5002
 
