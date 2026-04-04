@@ -125,6 +125,13 @@ vid spectre/
 - **重复事件绑定**：爬取按钮同时有 `onclick` 和 `addEventListener`，导致点击触发两次 API 调用，删除重复的监听器
 - **代码重构**：`checker.py` 和 `api/routes.py` 中重复的爬取逻辑合并到 `_fetch_and_update_subscription` 共享函数
 
+### 11. Docker 支持
+- 添加 Dockerfile（基于 python:3.13-slim + uv）
+- 添加 docker-compose.yml
+- 添加 .dockerignore
+- 添加缺失的 croniter 依赖到 pyproject.toml
+- gunicorn 使用 --preload 避免多 worker 竞态问题
+
 ## 设计决策
 
 ### 为什么用 uv？

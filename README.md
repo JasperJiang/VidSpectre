@@ -34,6 +34,17 @@ uv run python run.py
 
 访问 http://localhost:5002
 
+### Docker 部署
+
+```bash
+# 构建并运行
+docker build -t vidspectre .
+docker run -d -p 5002:5002 -v ./storage:/app/storage vidspectre
+
+# 或使用 docker-compose
+docker-compose up --build
+```
+
 ## 使用说明
 
 ### 添加订阅
@@ -72,7 +83,9 @@ VidSpectre/
 ├── plugins/               # 插件系统
 │   └── sources/btbtla/   # btbtla 数据源
 ├── templates/             # HTML 模板
-├── static/               # 静态资源
+├── storage/               # SQLite 数据库（gitignored）
+├── Dockerfile             # Docker 镜像定义
+├── docker-compose.yml     # Docker Compose 配置
 ├── config.py             # 配置
 └── run.py               # 启动入口
 ```

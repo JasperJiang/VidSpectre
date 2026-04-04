@@ -1,0 +1,9 @@
+storage/
+*.db
+__pycache__/
+*.pyc
+.git/
+.venv/
+.env
+*.md
+!requirements.txt
