@@ -157,6 +157,38 @@ def get_episodes(sub_id):
 
     return jsonify(result)
 
+@api_bp.route("/subscriptions/<int:sub_id>/movie-links", methods=["GET"])
+def get_movie_links(sub_id):
+    """Get all download links for a movie subscription"""
+    subscription = Subscription.query.get_or_404(sub_id)
+
+    if subscription.media_type != 'movie':
+        return jsonify({"error": "Not a movie subscription"}), 400
+
+    plugin = registry.get_data_source(subscription.source_plugin)
+    if not plugin:
+        return jsonify({"error": "Plugin not found"}), 404
+
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        links = loop.run_until_complete(plugin.get_download_links(subscription.media_id))
+    finally:
+        loop.close()
+
+    # Filter by keywords if set
+    keywords = subscription.search_keywords or ""
+    keyword_list = [k.strip().lower() for k in keywords.split(",") if k.strip()]
+    if keyword_list:
+        links = [link for link in links
+                 if all(k in link.get("title", "").lower() for k in keyword_list)]
+
+    return jsonify([{
+        "title": link.get("title", ""),
+        "url": link.get("url", ""),
+        "type": link.get("type", "")
+    } for link in links])
+
 @api_bp.route("/download-link", methods=["GET"])
 def get_download_link():
     """Get the actual magnet download link from a tdown page"""

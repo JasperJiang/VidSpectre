@@ -9,6 +9,20 @@
             <h2 class="text-xl font-bold">添加订阅</h2>
         </div>
         <div class="p-6">
+            <h3 class="text-lg font-medium text-gray-200 mb-2">搜索资源</h3>
+            <p class="text-sm text-gray-500 mb-4">搜索并选择正确的资源，它会自动填充下方表单的"名称"和"资源 ID"</p>
+
+            <div class="flex gap-2 mb-4">
+                <input type="text" id="search-keyword"
+                       class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
+                       placeholder="输入剧名搜索...">
+                <button type="button" onclick="searchMedia()"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    搜索
+                </button>
+            </div>
+            <div id="search-results" class="bg-gray-700 rounded-lg overflow-hidden mb-6"></div>
+
             <form method="POST" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-300 mb-1">媒体类型</label>
@@ -28,8 +42,7 @@
                     <label class="block text-sm font-medium text-gray-300 mb-1">资源 ID（可选）</label>
                     <input type="text" name="media_id"
                            class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
-                           placeholder="留空稍后通过搜索设置">
-                    <p class="text-xs text-gray-500 mt-1">或者通过下方的搜索功能选择资源</p>
+                           placeholder="留空，通过上方的搜索功能选择">
                 </div>
 
                 <div>
@@ -38,22 +51,6 @@
                         <option value="btbtla" selected>btbtla</option>
                     </select>
                 </div>
-
-                <hr class="border-gray-700">
-
-                <h3 class="text-lg font-medium text-gray-200">搜索资源</h3>
-                <p class="text-sm text-gray-500">搜索并选择正确的资源，它会自动填充上面的"名称"和"资源 ID"</p>
-
-                <div class="flex gap-2">
-                    <input type="text" id="search-keyword"
-                           class="flex-1 bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white"
-                           placeholder="输入剧名搜索...">
-                    <button type="button" onclick="searchMedia()"
-                            class="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg">
-                        搜索
-                    </button>
-                </div>
-                <div id="search-results" class="bg-gray-700 rounded-lg overflow-hidden"></div>
 
                 <div class="flex gap-3 pt-4">
                     <button type="submit"

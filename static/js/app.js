@@ -97,11 +97,27 @@ function toggleEpisodes(btn) {
     const row = document.getElementById('episodes-' + subId);
     const content = document.getElementById('episodes-content-' + subId);
     const loading = row ? row.querySelector('.episodes-loading') : null;
+    const mediaType = btn.dataset.mediaType || 'tv';  // NEW LINE
 
     if (row && row.style.display === 'none') {
         row.style.display = 'block';
         btn.textContent = '收起';
 
+        // NEW: Movie type - get links directly
+        if (mediaType === 'movie') {
+            fetch(`/api/subscriptions/${subId}/movie-links`)
+                .then(r => r.json())
+                .then(links => {
+                    if (loading) loading.style.display = 'none';
+                    renderMovieLinks(links, subId);
+                })
+                .catch(err => {
+                    if (loading) loading.textContent = '加载失败';
+                });
+            return;
+        }
+
+        // TV type - existing logic (fetch episodes)
         fetch(`/api/subscriptions/${subId}/episodes`)
             .then(r => r.json())
             .then(episodes => {
@@ -201,6 +217,61 @@ function renderEpisodes(episodes, subId) {
     });
 }
 
+function renderMovieLinks(links, subId) {
+    const content = document.getElementById('episodes-content-' + subId);
+    if (!links || links.length === 0) {
+        content.innerHTML = '<p class="text-gray-400">暂无可用资源</p>';
+        return;
+    }
+    let html = '<div class="space-y-2">';
+    links.forEach(link => {
+        html += `
+        <button class="get-magnet-link w-full text-left px-3 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-blue-400 hover:text-blue-300"
+                data-url="${escapeHtml(link.url)}"
+                data-title="${escapeHtml(link.title || link.name || '')}">
+            ${escapeHtml(link.title || link.name || '下载链接')}
+        </button>`;
+    });
+    html += '</div>';
+    content.innerHTML = html;
+
+    // Bind click events for links
+    content.querySelectorAll('.get-magnet-link').forEach(linkBtn => {
+        linkBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const originalText = this.textContent;
+            this.textContent = '获取中...';
+            const existingDisplay = this.parentElement.querySelector('.magnet-display');
+            if (existingDisplay) existingDisplay.remove();
+            const url = this.dataset.url;
+            if (url.startsWith('magnet:')) {
+                // Direct magnet link - show it
+                const magnetHtml = `<div class="magnet-display mt-2 p-2 bg-gray-750 rounded break-all">
+                    <a href="${escapeHtml(url)}" class="text-blue-400 hover:text-blue-300 text-sm break-all">${escapeHtml(url)}</a>
+                </div>`;
+                this.insertAdjacentHTML('afterend', magnetHtml);
+                this.textContent = originalText;
+            } else {
+                // Non-magnet URL - fetch actual magnet from API (same as TV episodes)
+                fetch('/api/download-link?url=' + encodeURIComponent(url))
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.magnet) {
+                            const magnetHtml = `<div class="magnet-display mt-2 p-2 bg-gray-750 rounded break-all">
+                                <a href="${escapeHtml(data.magnet)}" class="text-blue-400 hover:text-blue-300 text-sm break-all">${escapeHtml(data.magnet)}</a>
+                            </div>`;
+                            this.insertAdjacentHTML('afterend', magnetHtml);
+                        }
+                        this.textContent = originalText;
+                    })
+                    .catch(err => {
+                        this.textContent = originalText;
+                    });
+            }
+        });
+    });
+}
+
 function initSaveButtons() {
     document.querySelectorAll('.save-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -281,17 +352,26 @@ function searchMedia() {
                 return;
             }
             data.forEach(item => {
-                const badge = item.media_type === 'movie' ? '电影' : '电视剧';
                 const div = document.createElement('div');
-                div.className = 'p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700';
+                div.className = 'p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700 flex items-center gap-3';
+                // Cover image
+                const img = document.createElement('img');
+                img.src = item.cover_url || '';
+                img.className = 'w-12 h-12 object-cover rounded flex-shrink-0 bg-gray-600';
+                img.onerror = function() {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                };
+                const placeholder = document.createElement('div');
+                placeholder.className = 'w-12 h-12 rounded flex-shrink-0 bg-gray-600 hidden items-center justify-center text-gray-400 text-xs';
+                placeholder.textContent = '无图';
+                div.appendChild(img);
+                div.appendChild(placeholder);
+                // Name
                 const nameSpan = document.createElement('span');
-                nameSpan.className = 'font-medium';
+                nameSpan.className = 'font-medium flex-1 truncate';
                 nameSpan.textContent = item.name;
-                const badgeSpan = document.createElement('span');
-                badgeSpan.className = 'text-xs bg-gray-600 px-2 py-1 rounded';
-                badgeSpan.textContent = badge;
                 div.appendChild(nameSpan);
-                div.appendChild(badgeSpan);
                 div.addEventListener('click', function() {
                     document.querySelector('input[name="media_name"]').value = item.name;
                     document.querySelector('input[name="media_id"]').value = item.media_id;
