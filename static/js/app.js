@@ -291,6 +291,19 @@ function initEpisodeToggles() {
             toggleEpisodes(this);
         });
     });
+
+    // Close button (X) to collapse episodes/movie links
+    document.querySelectorAll('.close-episodes').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const subId = this.dataset.subId;
+            const row = document.getElementById('episodes-' + subId);
+            const toggleBtn = document.querySelector(`.toggle-episodes[data-sub-id="${subId}"]`);
+            if (row) {
+                row.style.display = 'none';
+                if (toggleBtn) toggleBtn.textContent = '展开';
+            }
+        });
+    });
 }
 
 function initDeleteForms() {
