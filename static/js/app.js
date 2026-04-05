@@ -235,39 +235,34 @@ function renderMovieLinks(links, subId) {
     html += '</div>';
     content.innerHTML = html;
 
-    // Bind click events for links
+    // Bind click events for links (same as TV episodes)
     content.querySelectorAll('.get-magnet-link').forEach(linkBtn => {
         linkBtn.addEventListener('click', function(e) {
             e.preventDefault();
             const originalText = this.textContent;
             this.textContent = '获取中...';
+
+            // Remove any existing magnet display
             const existingDisplay = this.parentElement.querySelector('.magnet-display');
             if (existingDisplay) existingDisplay.remove();
-            const url = this.dataset.url;
-            if (url.startsWith('magnet:')) {
-                // Direct magnet link - show it
-                const magnetHtml = `<div class="magnet-display mt-2 p-2 bg-gray-750 rounded break-all">
-                    <a href="${escapeHtml(url)}" class="text-blue-400 hover:text-blue-300 text-sm break-all">${escapeHtml(url)}</a>
-                </div>`;
-                this.insertAdjacentHTML('afterend', magnetHtml);
-                this.textContent = originalText;
-            } else {
-                // Non-magnet URL - fetch actual magnet from API (same as TV episodes)
-                fetch('/api/download-link?url=' + encodeURIComponent(url))
-                    .then(r => r.json())
-                    .then(data => {
-                        if (data.magnet) {
-                            const magnetHtml = `<div class="magnet-display mt-2 p-2 bg-gray-750 rounded break-all">
-                                <a href="${escapeHtml(data.magnet)}" class="text-blue-400 hover:text-blue-300 text-sm break-all">${escapeHtml(data.magnet)}</a>
-                            </div>`;
-                            this.insertAdjacentHTML('afterend', magnetHtml);
-                        }
-                        this.textContent = originalText;
-                    })
-                    .catch(err => {
-                        this.textContent = originalText;
-                    });
-            }
+
+            fetch('/api/download-link?url=' + encodeURIComponent(this.dataset.url))
+                .then(r => r.json())
+                .then(d => {
+                    if (d.magnet) {
+                        const display = document.createElement('div');
+                        display.className = 'magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all';
+                        display.innerHTML = '磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span>';
+                        this.parentElement.appendChild(display);
+                    } else {
+                        showToast('获取失败', 'error');
+                    }
+                    this.textContent = originalText;
+                })
+                .catch(() => {
+                    showToast('获取失败', 'error');
+                    this.textContent = originalText;
+                });
         });
     });
 }
