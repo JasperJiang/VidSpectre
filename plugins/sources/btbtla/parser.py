@@ -95,9 +95,9 @@ class BtbtlaParser:
 
     def get_updates(self, media_id: str) -> Optional[UpdateInfo]:
         """Get update info for media"""
-        # Strip .html suffix if present to get pure ID
-        clean_id = media_id.replace(".html", "") if media_id else media_id
-        url = f"{BASE_URL}/detail/{clean_id}"
+        if not media_id:
+            return None
+        url = f"{BASE_URL}/detail/{media_id}"
 
         try:
             response = self.session.get(url, timeout=10)
@@ -123,8 +123,10 @@ class BtbtlaParser:
         if time_elem:
             update_time = time_elem.get_text(strip=True)
 
-        # Get download links
+        # Get download links - check both direct magnet/torrent links AND tdown page links
         download_links = []
+
+        # First, look for direct magnet or torrent links
         for link_elem in soup.select(".download-link, .magnet-link, a[href^='magnet:']"):
             href = link_elem.get("href", "")
             if href.startswith("magnet:") or href.endswith(".torrent"):
@@ -133,6 +135,24 @@ class BtbtlaParser:
                     "url": href,
                     "title": link_elem.get_text(strip=True)
                 })
+
+        # Also look for tdown page links (for sites where magnets are behind intermediate pages)
+        for link_elem in soup.select("a[href^='/tdown/']"):
+            href = link_elem.get("href", "")
+            if not href or not href.endswith(".html"):
+                continue
+            title = link_elem.get_text(strip=True)
+            if not title or len(title) < 5:
+                continue
+            # Skip if we already have a link with the same href
+            if any(d.get("url", "").endswith(href) for d in download_links):
+                continue
+            full_url = BASE_URL + href if href.startswith("/") else href
+            download_links.append({
+                "type": "torrent",
+                "url": full_url,
+                "title": title
+            })
 
         return UpdateInfo(
             media_id=media_id,
