@@ -357,7 +357,7 @@ function searchMedia() {
                 // Cover image (clickable to enlarge)
                 const img = document.createElement('img');
                 img.src = item.cover_url || '';
-                img.className = 'w-12 h-12 object-cover rounded flex-shrink-0 bg-gray-600 cursor-pointer';
+                img.className = 'w-12 h-12 object-cover rounded flex-shrink-0 bg-gray-600 cursor-zoom-in hover:opacity-80 transition-opacity';
                 img.onerror = function() {
                     this.style.display = 'none';
                     this.nextElementSibling.style.display = 'flex';
