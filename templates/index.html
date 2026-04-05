@@ -67,10 +67,12 @@
                            placeholder="关键字"
                            data-sub-id="{{ sub.id }}">
                 </div>
+                {% if sub.media_type == 'tv' %}
                 <div>
                     <span class="text-gray-500">最新:</span>
                     <span class="latest-episode">{{ sub.latest_episode or '-' }}</span>
                 </div>
+                {% endif %}
             </div>
         </div>
 
