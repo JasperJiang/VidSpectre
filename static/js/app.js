@@ -354,13 +354,19 @@ function searchMedia() {
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'p-3 border-b border-gray-700 cursor-pointer hover:bg-gray-700 flex items-center gap-3';
-                // Cover image
+                // Cover image (clickable to enlarge)
                 const img = document.createElement('img');
                 img.src = item.cover_url || '';
-                img.className = 'w-12 h-12 object-cover rounded flex-shrink-0 bg-gray-600';
+                img.className = 'w-12 h-12 object-cover rounded flex-shrink-0 bg-gray-600 cursor-pointer';
                 img.onerror = function() {
                     this.style.display = 'none';
                     this.nextElementSibling.style.display = 'flex';
+                };
+                img.onclick = function(e) {
+                    e.stopPropagation();
+                    if (item.cover_url) {
+                        openImgModal(item.cover_url);
+                    }
                 };
                 const placeholder = document.createElement('div');
                 placeholder.className = 'w-12 h-12 rounded flex-shrink-0 bg-gray-600 hidden items-center justify-center text-gray-400 text-xs';
@@ -386,6 +392,22 @@ function searchMedia() {
 }
 
 window.searchMedia = searchMedia;
+window.openImgModal = openImgModal;
+window.closeImgModal = closeImgModal;
+
+function openImgModal(src) {
+    const modal = document.getElementById('img-modal');
+    const modalImg = document.getElementById('img-modal-content');
+    modalImg.src = src;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeImgModal() {
+    const modal = document.getElementById('img-modal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     initSaveButtons();
