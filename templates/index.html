@@ -102,12 +102,12 @@
             </div>
         </div>
 
-        <!-- Episodes Expandable Section -->
-        {% if sub.media_type == 'tv' %}
+        <!-- Episodes/Movie Links Expandable Section -->
+        {% if sub.media_id %}
         <div id="episodes-{{ sub.id }}" style="display: none;" class="border-t border-gray-700">
             <div class="p-4 bg-gray-750">
                 <div class="flex justify-between items-center mb-3">
-                    <h6 class="font-medium text-gray-300">剧集列表</h6>
+                    <h6 class="font-medium text-gray-300">{% if sub.media_type == 'movie' %}资源列表{% else %}剧集列表{% endif %}</h6>
                     <button class="close-episodes text-gray-400 hover:text-white"
                             data-sub-id="{{ sub.id }}">
                         ✕
