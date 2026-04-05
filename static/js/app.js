@@ -184,18 +184,17 @@ function renderEpisodes(episodes, subId) {
                             const originalText = this.textContent;
                             this.textContent = '获取中...';
 
-                            // Remove any existing magnet display
-                            const existingDisplay = this.parentElement.querySelector('.magnet-display');
-                            if (existingDisplay) existingDisplay.remove();
+                            // Remove any existing magnet display directly after this button
+                            if (this.nextElementSibling?.classList.contains('magnet-display')) {
+                                this.nextElementSibling.remove();
+                            }
 
                             fetch('/api/download-link?url=' + encodeURIComponent(this.dataset.url))
                                 .then(r => r.json())
                                 .then(d => {
                                     if (d.magnet) {
-                                        const display = document.createElement('div');
-                                        display.className = 'magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all';
-                                        display.innerHTML = '磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span>';
-                                        this.parentElement.appendChild(display);
+                                        const magnetHtml = '<div class="magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all">磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span></div>';
+                                        this.insertAdjacentHTML('afterend', magnetHtml);
                                     } else {
                                         showToast('获取失败', 'error');
                                     }
@@ -250,10 +249,12 @@ function renderMovieLinks(links, subId) {
                 .then(r => r.json())
                 .then(d => {
                     if (d.magnet) {
-                        const display = document.createElement('div');
-                        display.className = 'magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all';
-                        display.innerHTML = '磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span>';
-                        this.parentElement.appendChild(display);
+                        // Remove existing magnet display directly after this button
+                        if (this.nextElementSibling?.classList.contains('magnet-display')) {
+                            this.nextElementSibling.remove();
+                        }
+                        const magnetHtml = '<div class="magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all">磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span></div>';
+                        this.insertAdjacentHTML('afterend', magnetHtml);
                     } else {
                         showToast('获取失败', 'error');
                     }
