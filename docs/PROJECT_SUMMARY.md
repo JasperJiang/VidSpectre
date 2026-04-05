@@ -229,6 +229,12 @@ uv run python run.py
 - **模板修复**：展开区域条件从 `media_type == 'tv'` 改为 `media_id`，电影也有展开按钮和展开区域
 - **相关文件**：`static/js/app.js`、`templates/index.html`、`templates/subscription.html`、`app/api/routes.py`、`plugins/sources/btbtla/parser.py`
 
+### 20. 订阅列表 UI 细节优化
+- **封面图点击放大**：搜索结果中的封面图点击后弹出模态框显示大图
+- **放大镜效果**：封面图悬停时显示放大镜光标和透明度变化
+- **电影隐藏集数信息**：电影的订阅卡片不再显示"最新"列（电影无集数概念）
+- **相关文件**：`static/js/app.js`、`templates/index.html`、`templates/subscription.html`
+
 ## 待完成功能
 
 1. 通知推送插件（预留接口，未实现）
