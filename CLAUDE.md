@@ -43,6 +43,8 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 - API endpoints prefixed with `/api/`
 - `POST /api/fetch-all` - Trigger crawl for all subscriptions (returns task_id)
 - `GET /api/fetch-all/<task_id>` - Poll task status
+- `GET /api/subscriptions/<id>/episodes` - Get TV episode list (grouped by episode number)
+- `GET /api/subscriptions/<id>/movie-links` - Get movie download resources (direct list, no episode grouping)
 
 ### Frontend
 - Tailwind CSS v3 (Play CDN) + Vanilla JS
@@ -71,9 +73,10 @@ The app uses Flask's application factory pattern in `app/__init__.py`:
 - **Important**: `media_id` (e.g., `47001256.html`) is NOT the same as resource ID
 - Resources are parsed directly from the detail page (no separate tdown API call needed)
 - Magnet links are only available on the tdown page
+- **Movie vs TV behavior**: TV shows group resources by episode number; movies show a flat list of resources directly
 
 ### media_id is Critical
-- The `Subscription.media_id` field MUST be set for episode listing to work
+- The `Subscription.media_id` field MUST be set for both episode listing (TV) and resource listing (movies) to work
 - If `media_id` is `None`, the "展开" button will show a ⚠ warning
 - When adding subscriptions via search, ensure `media_id` is properly saved
 

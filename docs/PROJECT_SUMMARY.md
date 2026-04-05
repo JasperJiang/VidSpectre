@@ -218,6 +218,17 @@ uv run python run.py
 - **错误提示**：获取失败时显示 toast 通知（非 alert 弹窗）
 - **相关文件**：`static/js/app.js`
 
+### 19. 电影爬取优化
+- **搜索结果改进**：移除"电影/电视剧"类型标签，添加封面图片显示（使用 btbtla 已有的 `cover_url` 字段）
+- **订阅添加页面**：搜索模块移到表单上方，更醒目
+- **电影展开交互**：电影点击展开后直接显示资源列表，无需选择集数
+- **新增 API**：`GET /api/subscriptions/{id}/movie-links` - 获取电影的下载资源列表
+- **btbtla 解析器修复**：
+  - 修复 `get_updates()` 中错误剥离 `.html` 导致 404 的问题
+  - 修复 `_parse_detail_page()` 未提取 `/tdown/` 链接的问题，电影资源现在能正确显示
+- **模板修复**：展开区域条件从 `media_type == 'tv'` 改为 `media_id`，电影也有展开按钮和展开区域
+- **相关文件**：`static/js/app.js`、`templates/index.html`、`templates/subscription.html`、`app/api/routes.py`、`plugins/sources/btbtla/parser.py`
+
 ## 待完成功能
 
 1. 通知推送插件（预留接口，未实现）
