@@ -10,6 +10,16 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Helper to show toast notifications
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 rounded-lg shadow-lg z-50 ' +
+        (type === 'error' ? 'bg-red-600 text-white' : 'bg-gray-700 text-white');
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
+
 // Global functions exposed on window
 window.fetchSubscription = fetchSubscription;
 window.saveSubscription = saveSubscription;
@@ -155,20 +165,29 @@ function renderEpisodes(episodes, subId) {
                     linksContainer.querySelectorAll('.get-magnet-link').forEach(linkBtn => {
                         linkBtn.addEventListener('click', function(e) {
                             e.preventDefault();
+                            const originalText = this.textContent;
                             this.textContent = '获取中...';
+
+                            // Remove any existing magnet display
+                            const existingDisplay = this.parentElement.querySelector('.magnet-display');
+                            if (existingDisplay) existingDisplay.remove();
+
                             fetch('/api/download-link?url=' + encodeURIComponent(this.dataset.url))
                                 .then(r => r.json())
                                 .then(d => {
                                     if (d.magnet) {
-                                        prompt('磁力链接:', d.magnet);
+                                        const display = document.createElement('div');
+                                        display.className = 'magnet-display mt-2 p-2 bg-gray-700 rounded text-xs break-all';
+                                        display.innerHTML = '磁力：<span class="text-green-400 select-all cursor-pointer">' + escapeHtml(d.magnet) + '</span>';
+                                        this.parentElement.appendChild(display);
                                     } else {
-                                        alert('获取失败');
+                                        showToast('获取失败', 'error');
                                     }
-                                    this.textContent = this.dataset.title;
+                                    this.textContent = originalText;
                                 })
                                 .catch(() => {
-                                    alert('获取失败');
-                                    this.textContent = this.dataset.title;
+                                    showToast('获取失败', 'error');
+                                    this.textContent = originalText;
                                 });
                         });
                     });
