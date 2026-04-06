@@ -224,10 +224,6 @@ def trigger_fetch_all():
     """手动触发所有订阅的爬取"""
     from app.core.checker import _run_all_subscriptions
 
-    # 检查定时任务开关
-    if not getattr(Config, 'SCHEDULER_ENABLED', True):
-        return jsonify({"error": "定时任务已关闭，请在设置页面开启"}), 403
-
     task_id = TaskManager.create_task()
     task = TaskManager.get_task(task_id)
 
