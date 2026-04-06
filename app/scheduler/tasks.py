@@ -13,13 +13,13 @@ def setup_scheduler(app):
     global _scheduler_app
     _scheduler_app = app
 
-    from app.database.models import Subscription
-    from app.core.checker import _fetch_and_update_subscription
-
     def run_all_checks():
-        subscriptions = Subscription.query.filter_by(status='active').all()
-        for sub in subscriptions:
-            _fetch_and_update_subscription(sub)
+        # 检查定时任务开关
+        if not getattr(Config, 'SCHEDULER_ENABLED', True):
+            return
+
+        from app.core.checker import _run_all_subscriptions
+        _run_all_subscriptions()
 
     # 解析全局 cron 表达式
     cron_expr = Config.DEFAULT_INTERVAL_CRON
@@ -50,13 +50,13 @@ def reschedule_job():
     if not _scheduler_app:
         return
 
-    from app.database.models import Subscription
-    from app.core.checker import _fetch_and_update_subscription
-
     def run_all_checks():
-        subscriptions = Subscription.query.filter_by(status='active').all()
-        for sub in subscriptions:
-            _fetch_and_update_subscription(sub)
+        # 检查定时任务开关
+        if not getattr(Config, 'SCHEDULER_ENABLED', True):
+            return
+
+        from app.core.checker import _run_all_subscriptions
+        _run_all_subscriptions()
 
     cron_expr = Config.DEFAULT_INTERVAL_CRON
     cron_parts = cron_expr.split()
