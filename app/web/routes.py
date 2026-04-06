@@ -88,7 +88,20 @@ def settings():
             retry_setting = Setting(key="fetch_retry_count", value=fetch_retry_count)
             db.session.add(retry_setting)
 
+        scheduler_enabled = request.form.get("scheduler_enabled", "true")
+
+        enabled_setting = Setting.query.get("scheduler_enabled")
+        if enabled_setting:
+            enabled_setting.value = scheduler_enabled
+        else:
+            enabled_setting = Setting(key="scheduler_enabled", value=scheduler_enabled)
+            db.session.add(enabled_setting)
+
         db.session.commit()
+        # 更新内存中的值
+        Config.DEFAULT_INTERVAL_CRON = default_cron
+        Config.FETCH_RETRY_COUNT = int(fetch_retry_count)
+        Config.SCHEDULER_ENABLED = scheduler_enabled == "true"
         # 更新内存中的值
         Config.DEFAULT_INTERVAL_CRON = default_cron
         Config.FETCH_RETRY_COUNT = int(fetch_retry_count)
@@ -100,6 +113,10 @@ def settings():
     retry_setting = Setting.query.get("fetch_retry_count")
     fetch_retry_count = retry_setting.value if retry_setting else str(Config.FETCH_RETRY_COUNT)
 
+    # 获取 scheduler_enabled
+    scheduler_enabled = Setting.query.get("scheduler_enabled")
+
     return render_template("settings.html",
                            default_cron=Config.DEFAULT_INTERVAL_CRON,
-                           fetch_retry_count=fetch_retry_count)
+                           fetch_retry_count=fetch_retry_count,
+                           scheduler_enabled=scheduler_enabled.value if scheduler_enabled else "true")
