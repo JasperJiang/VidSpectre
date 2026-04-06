@@ -49,3 +49,32 @@ def _fetch_and_update_subscription(subscription: Subscription, retry_count: int 
                 raise
     finally:
         loop.close()
+
+
+def _run_all_subscriptions():
+    """遍历所有活跃订阅并执行抓取，返回 (results, failed_count)"""
+    from app.database.models import Subscription
+
+    results = []
+    failed_count = 0
+    subscriptions = Subscription.query.filter_by(status='active').all()
+
+    for sub in subscriptions:
+        try:
+            updated, latest = _fetch_and_update_subscription(sub)
+            results.append({
+                "subscription_id": sub.id,
+                "name": sub.media_name,
+                "status": "success" if updated else "no_update",
+                "latest_episode": str(latest) if latest else None
+            })
+        except Exception as e:
+            results.append({
+                "subscription_id": sub.id,
+                "name": sub.media_name,
+                "status": "error",
+                "error": str(e)
+            })
+            failed_count += 1
+
+    return results, failed_count
