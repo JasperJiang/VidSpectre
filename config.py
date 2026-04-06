@@ -11,6 +11,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # Scheduler settings
+    SCHEDULER_ENABLED = True  # 定时任务开关，默认开启
     SCHEDULER_INTERVAL_HOURS = 6
     DEFAULT_INTERVAL_CRON = "0 */6 * * *"  # 默认每6小时
     FETCH_RETRY_COUNT = int(os.environ.get("FETCH_RETRY_COUNT", "3"))  # 默认重试3次
