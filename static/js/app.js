@@ -484,17 +484,22 @@ async function pollTaskStatus(taskId) {
             const completed = data.completed || 0;
             const total = data.total || 0;
 
+            const successNames = data.results
+                .filter(r => r.status !== 'error')
+                .map(r => r.name)
+                .join('、');
+            const failedNames = data.results
+                .filter(r => r.status === 'error')
+                .map(r => r.name)
+                .join('、');
+
             let html = '';
             if (failed > 0) {
-                const failedNames = data.results
-                    .filter(r => r.status === 'error')
-                    .map(r => r.name)
-                    .join('、');
-                html = `<span class="text-green-400">✓ 成功 ${completed} 个</span>，<span class="text-red-400">✗ 失败：${failedNames}</span>`;
+                html = `<span class="text-green-400">✓ 成功 ${completed} 个：${successNames}</span><br><span class="text-red-400">✗ 失败 ${failed} 个：${failedNames}</span>`;
                 resultDiv.classList.remove('bg-gray-800');
                 resultDiv.classList.add('bg-red-900/30', 'border-red-700');
             } else {
-                html = `<span class="text-green-400">✓ 成功 ${total} 个</span>`;
+                html = `<span class="text-green-400">✓ 成功 ${total} 个：${successNames}</span>`;
                 resultDiv.classList.remove('bg-red-900/30', 'border-red-700');
                 resultDiv.classList.add('bg-gray-800');
             }
