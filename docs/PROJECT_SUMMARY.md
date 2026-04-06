@@ -256,3 +256,10 @@ uv run python run.py
 - **电影资源显示**：订阅列表电影项显示"资源: 有资源/无"（替代集数）
 - **手动执行不受开关影响**：订阅列表的手动执行按钮始终可用
 - **相关文件**：`config.py`、`app/__init__.py`、`app/scheduler/tasks.py`、`app/core/checker.py`、`app/api/routes.py`、`app/web/routes.py`、`templates/settings.html`、`templates/index.html`、`static/js/app.js`
+
+### 22. 订阅列表增强功能
+- **类型筛选器**：订阅列表添加"全部/电影/电视剧"筛选按钮，前端过滤显示对应类型的订阅卡片
+- **快速已看按钮**：电视剧订阅卡片添加"已看"按钮，点击后将 `current_episode` 加1（空值设为"1"），自动更新数据库
+- **按钮布局优化**：已看和爬取按钮靠左，更下拉菜单靠右
+- **Bug修复**：修复模板中缺少 subscription-card 闭合标签导致的卡片嵌套问题
+- **相关文件**：`templates/index.html`、`static/js/app.js`

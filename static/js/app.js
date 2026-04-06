@@ -24,6 +24,7 @@ function showToast(message, type = 'info') {
 window.fetchSubscription = fetchSubscription;
 window.saveSubscription = saveSubscription;
 window.toggleEpisodes = toggleEpisodes;
+window.markWatched = markWatched;
 
 function fetchSubscription(btn) {
     if (btn.disabled) return;  // Guard against double-click
@@ -89,6 +90,51 @@ function saveSubscription(subId) {
         console.error('Failed to save subscription:', err);
         if (episodeInput) episodeInput.classList.add('border-red-500');
         if (keywordsInput) keywordsInput.classList.add('border-red-500');
+    });
+}
+
+function markWatched(btn) {
+    const subId = btn.dataset.subId;
+    const episodeInput = document.querySelector(`.episode-input[data-sub-id="${subId}"]`);
+    const currentValue = episodeInput ? episodeInput.value.trim() : '';
+
+    let newEpisode;
+    if (!currentValue) {
+        newEpisode = '1';
+    } else {
+        // Extract the last number sequence and increment
+        const matches = currentValue.match(/\d+/g);
+        if (matches && matches.length > 0) {
+            const lastNumber = parseInt(matches[matches.length - 1], 10);
+            newEpisode = String(lastNumber + 1);
+        } else {
+            newEpisode = '1';
+        }
+    }
+
+    // Update input field first for immediate visual feedback
+    if (episodeInput) {
+        episodeInput.value = newEpisode;
+    }
+
+    // Then save to database
+    fetch(`/api/subscriptions/${subId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ current_episode: newEpisode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (episodeInput) {
+            episodeInput.classList.add('border-green-500');
+            setTimeout(() => episodeInput.classList.remove('border-green-500'), 1000);
+        }
+        showToast(`已更新为第 ${newEpisode} 集`);
+    })
+    .catch(err => {
+        console.error('Failed to update watched episode:', err);
+        if (episodeInput) episodeInput.classList.add('border-red-500');
+        showToast('更新失败', 'error');
     });
 }
 
@@ -277,6 +323,40 @@ function initSaveButtons() {
     });
 }
 
+function initMarkWatchedButtons() {
+    document.querySelectorAll('.mark-watched-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            markWatched(this);
+        });
+    });
+}
+
+function initFilterButtons() {
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const filter = this.dataset.filter;
+
+            // Update active state
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                b.classList.add('bg-gray-600', 'hover:bg-gray-500');
+            });
+            this.classList.remove('bg-gray-600', 'hover:bg-gray-500');
+            this.classList.add('bg-blue-600', 'hover:bg-blue-700');
+
+            // Filter subscription cards
+            document.querySelectorAll('.subscription-card').forEach(card => {
+                const mediaType = card.dataset.mediaType;
+                if (filter === 'all' || mediaType === filter) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+    });
+}
+
 function initFetchButtons() {
     document.querySelectorAll('.fetch-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -425,6 +505,8 @@ document.addEventListener('DOMContentLoaded', function() {
     initDeleteForms();
     initMoreMenus();
     initSearchKeyword();
+    initMarkWatchedButtons();
+    initFilterButtons();
 });
 
 async function triggerFetchAll() {

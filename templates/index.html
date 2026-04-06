@@ -15,6 +15,22 @@
     </div>
 </div>
 
+<!-- 类型筛选器 -->
+<div class="flex gap-2 mb-4">
+    <button class="filter-btn active bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+            data-filter="all">
+        全部
+    </button>
+    <button class="filter-btn bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+            data-filter="movie">
+        电影
+    </button>
+    <button class="filter-btn bg-gray-600 hover:bg-gray-500 text-white px-3 py-1.5 rounded-lg text-sm transition-colors"
+            data-filter="tv">
+        电视剧
+    </button>
+</div>
+
 <!-- 手动执行区域 -->
 <div class="mb-4">
     <div id="fetch-result" class="hidden mb-3 p-4 rounded-lg bg-gray-800 border border-gray-700">
@@ -30,7 +46,7 @@
 <div class="space-y-4">
     {% for sub in subscriptions %}
     <!-- Subscription Card -->
-    <div class="bg-gray-800 rounded-lg border border-gray-700 subscription-card">
+    <div class="bg-gray-800 rounded-lg border border-gray-700 subscription-card" data-media-type="{{ sub.media_type }}">
         <!-- Card Header -->
         <div class="p-4 flex justify-between items-start">
             <div class="flex-1 min-w-0">
@@ -94,10 +110,18 @@
 
         <!-- Card Actions -->
         <div class="px-4 py-3 bg-gray-750 border-t border-gray-700 flex items-center justify-between">
-            <button class="fetch-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
-                    data-sub-id="{{ sub.id }}">
-                🔄 爬取
-            </button>
+            <div class="flex gap-2">
+                {% if sub.media_type == 'tv' %}
+                <button class="mark-watched-btn bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-medium"
+                        data-sub-id="{{ sub.id }}">
+                    ✓ 已看
+                </button>
+                {% endif %}
+                <button class="fetch-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                        data-sub-id="{{ sub.id }}">
+                    🔄 爬取
+                </button>
+            </div>
             <div class="relative">
                 <button class="more-menu-btn bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg">
                     ⋯ 更多
@@ -137,6 +161,7 @@
             </div>
         </div>
         {% endif %}
+    </div>
     {% endfor %}
 </div>
 {% else %}
