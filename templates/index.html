@@ -83,6 +83,11 @@
                     <span class="text-gray-500">最新:</span>
                     <span class="latest-episode">{{ sub.latest_episode or '-' }}</span>
                 </div>
+                {% else %}
+                <div>
+                    <span class="text-gray-500">资源:</span>
+                    <span class="latest-episode">{{ sub.latest_episode or '无' }}</span>
+                </div>
                 {% endif %}
             </div>
         </div>
