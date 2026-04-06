@@ -37,6 +37,7 @@
                 </div>
 
                 <div class="mt-4 flex items-center gap-3">
+                    <input type="hidden" name="scheduler_enabled" value="false">
                     <label class="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" id="scheduler_enabled" name="scheduler_enabled" value="true"
                                class="sr-only peer" {{ 'checked' if scheduler_enabled == 'true' else '' }}>
