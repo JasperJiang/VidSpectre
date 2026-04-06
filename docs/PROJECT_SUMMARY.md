@@ -244,3 +244,15 @@ uv run python run.py
 2. 更多的数据源插件
 3. 更完善的错误处理
 4. 日志系统（当前用 print）
+
+### 21. 定时任务开关和手动执行
+- **新增配置项**：`SCHEDULER_ENABLED`（默认开启）控制定时任务是否执行
+- **设置页面 Toggle**：cron 表达式下方添加"启用定时任务"开关
+- **订阅列表手动执行**：订阅列表顶部添加"手动执行"按钮
+- **结果显示**：执行完成后显示成功/失败订阅列表，3秒后自动消失并刷新
+- **代码复用**：`checker.py` 中 `_run_all_subscriptions()` 供定时任务和手动执行共用
+- **电影爬取修复**：Btbtla 插件添加 `get_movie_links()` 方法，修复电影爬取报错
+- **统一爬取方式**：手动执行和定时任务都使用 `get_episode_links`/`get_movie_links` 获取资源
+- **电影资源显示**：订阅列表电影项显示"资源: 有资源/无"（替代集数）
+- **手动执行不受开关影响**：订阅列表的手动执行按钮始终可用
+- **相关文件**：`config.py`、`app/__init__.py`、`app/scheduler/tasks.py`、`app/core/checker.py`、`app/api/routes.py`、`app/web/routes.py`、`templates/settings.html`、`templates/index.html`、`static/js/app.js`

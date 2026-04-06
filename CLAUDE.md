@@ -31,11 +31,12 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 - Default: `"0 */6 * * *"` (every 6 hours)
 - All active subscriptions are crawled together at each scheduled time
 - Network errors retry up to `FETCH_RETRY_COUNT` times (default: 3)
+- Scheduler can be enabled/disabled via `SCHEDULER_ENABLED` config (default: `True`)
 
 ### Database Models
 - `Subscription` model in `app/database/models.py`
 - Key fields: `media_type`, `media_name`, `media_id`, `source_plugin`, `current_episode`, `search_keywords`
-- `Setting` model (key-value) for persisting app settings like `default_interval_cron` and `fetch_retry_count`
+- `Setting` model (key-value) for persisting app settings like `default_interval_cron`, `fetch_retry_count`, and `scheduler_enabled`
 
 ### API Structure
 - REST API via Flask Blueprints in `app/api/routes.py`
@@ -56,8 +57,9 @@ VidSpectre uses a plugin architecture for data sources. Plugins are loaded from 
 ## Cron Schedule Feature
 - Global cron expression in `config.Config.DEFAULT_INTERVAL_CRON` ("0 */6 * * *" = every 6 hours)
 - Retry count configurable via `config.Config.FETCH_RETRY_COUNT` (default: 3)
-- Settings page at `/settings` for configuring global default and retry count
-- Manual trigger button on settings page triggers crawl immediately (polling for status)
+- Scheduler toggle via `config.Config.SCHEDULER_ENABLED` (default: `True`)
+- Settings page at `/settings` for configuring global cron, retry count, and scheduler toggle
+- Manual trigger on subscription list page (`/`) - not affected by scheduler toggle
 
 ## Critical Implementation Details
 
