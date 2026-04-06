@@ -32,6 +32,10 @@ def create_app():
         if cron_setting:
             Config.DEFAULT_INTERVAL_CRON = cron_setting.value
 
+        scheduler_enabled = Setting.query.get("scheduler_enabled")
+        if scheduler_enabled:
+            Config.SCHEDULER_ENABLED = scheduler_enabled.value == "true"
+
     # Setup scheduler
     from app.scheduler.tasks import setup_scheduler
     setup_scheduler(app)
