@@ -7,7 +7,7 @@ description: Use when modifying VidSpectre code - ensures project documentation 
 
 ## 概述
 
-在 VidSpectre 项目中进行任何代码修改后，需要同步更新 `docs/PROJECT_SUMMARY.md` 和 `CLAUDE.md`，确保文档与实现保持一致。
+在 VidSpectre 项目中进行任何代码修改后，需要同步更新 `docs/PROJECT_SUMMARY.md`、`CLAUDE.md`、`README.md`，确保文档与实现保持一致。
 
 ## 何时使用
 
