@@ -222,31 +222,21 @@ def get_download_link():
 @api_bp.route("/fetch-all", methods=["POST"])
 def trigger_fetch_all():
     """手动触发所有订阅的爬取"""
+    from app.core.checker import _run_all_subscriptions
+
+    # 检查定时任务开关
+    if not getattr(Config, 'SCHEDULER_ENABLED', True):
+        return jsonify({"error": "定时任务已关闭，请在设置页面开启"}), 403
+
     task_id = TaskManager.create_task()
     task = TaskManager.get_task(task_id)
 
-    subscriptions = Subscription.query.filter_by(status='active').all()
-    task.total = len(subscriptions)
+    results, failed_count = _run_all_subscriptions()
 
-    for sub in subscriptions:
-        try:
-            updated, latest = _fetch_and_update_subscription(sub)
-            task.results.append({
-                "subscription_id": sub.id,
-                "name": sub.media_name,
-                "status": "success" if updated else "no_update",
-                "latest_episode": str(latest) if latest else None
-            })
-            task.completed += 1
-        except Exception as e:
-            task.results.append({
-                "subscription_id": sub.id,
-                "name": sub.media_name,
-                "status": "error",
-                "error": str(e)
-            })
-            task.failed += 1
-
+    task.results = results
+    task.total = len(results)
+    task.completed = len(results) - failed_count
+    task.failed = failed_count
     task.status = "completed"
     task.finished_at = datetime.utcnow()
 
