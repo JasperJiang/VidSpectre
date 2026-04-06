@@ -426,3 +426,92 @@ document.addEventListener('DOMContentLoaded', function() {
     initMoreMenus();
     initSearchKeyword();
 });
+
+async function triggerFetchAll() {
+    const btn = document.getElementById('trigger-fetch-btn');
+    const resultDiv = document.getElementById('fetch-result');
+    const resultText = document.getElementById('fetch-result-text');
+
+    btn.disabled = true;
+    btn.classList.add('opacity-50', 'cursor-not-allowed');
+    btn.textContent = '执行中...';
+
+    try {
+        const response = await fetch('/api/fetch-all', { method: 'POST' });
+        const data = await response.json();
+
+        if (data.error) {
+            resultText.innerHTML = `<span class="text-red-400">✗ ${data.error}</span>`;
+            resultDiv.classList.remove('hidden');
+            resultDiv.classList.remove('bg-gray-800');
+            resultDiv.classList.add('bg-red-900/30', 'border-red-700');
+            setTimeout(() => {
+                resultDiv.classList.add('hidden');
+            }, 3000);
+            return;
+        }
+
+        const taskId = data.task_id;
+        pollTaskStatus(taskId);
+
+    } catch (error) {
+        resultText.innerHTML = `<span class="text-red-400">✗ 请求失败: ${error.message}</span>`;
+        resultDiv.classList.remove('hidden');
+        resultDiv.classList.add('bg-red-900/30', 'border-red-700');
+        setTimeout(() => {
+            resultDiv.classList.add('hidden');
+        }, 3000);
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-50', 'cursor-not-allowed');
+        btn.textContent = '手动执行';
+    }
+}
+
+async function pollTaskStatus(taskId) {
+    const resultDiv = document.getElementById('fetch-result');
+    const resultText = document.getElementById('fetch-result-text');
+    const btn = document.getElementById('trigger-fetch-btn');
+
+    btn.textContent = '执行中...';
+
+    const poll = async () => {
+        const response = await fetch(`/api/fetch-all/${taskId}`);
+        const data = await response.json();
+
+        if (data.status === 'completed') {
+            const failed = data.failed || 0;
+            const completed = data.completed || 0;
+            const total = data.total || 0;
+
+            let html = '';
+            if (failed > 0) {
+                const failedNames = data.results
+                    .filter(r => r.status === 'error')
+                    .map(r => r.name)
+                    .join('、');
+                html = `<span class="text-green-400">✓ 成功 ${completed} 个</span>，<span class="text-red-400">✗ 失败：${failedNames}</span>`;
+                resultDiv.classList.remove('bg-gray-800');
+                resultDiv.classList.add('bg-red-900/30', 'border-red-700');
+            } else {
+                html = `<span class="text-green-400">✓ 成功 ${total} 个</span>`;
+                resultDiv.classList.remove('bg-red-900/30', 'border-red-700');
+                resultDiv.classList.add('bg-gray-800');
+            }
+
+            resultText.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+
+            setTimeout(() => {
+                resultDiv.classList.add('hidden');
+                location.reload();
+            }, 3000);
+
+            return;
+        }
+
+        setTimeout(poll, 500);
+    };
+
+    poll();
+}
