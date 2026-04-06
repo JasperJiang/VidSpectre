@@ -36,6 +36,11 @@ class BtbtlaPlugin(DataSourcePlugin):
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, self.parser.get_episode_links, media_id)
 
+    async def get_movie_links(self, media_id: str) -> Dict[str, List[Dict]]:
+        """Get movie download links"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.parser.get_movie_links, media_id)
+
 def register(registry):
     """Register plugin to registry"""
     registry.register_data_source(BtbtlaPlugin())

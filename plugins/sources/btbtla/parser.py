@@ -247,6 +247,50 @@ class BtbtlaParser:
 
         return 0
 
+    def get_movie_links(self, media_id: str) -> Dict[str, List[Dict]]:
+        """Get movie download links - returns flat list grouped under key '1'"""
+        if not media_id:
+            return {}
+
+        url = f"{BASE_URL}/detail/{media_id}"
+
+        try:
+            response = self.session.get(url, timeout=10)
+            response.raise_for_status()
+            return self._parse_movie_from_detail(response.text)
+        except Exception as e:
+            print(f"Get movie links error: {e}")
+            return {}
+
+    def _parse_movie_from_detail(self, html: str) -> Dict[str, List[Dict]]:
+        """Parse detail page for movie links - grouped under '1'"""
+        soup = BeautifulSoup(html, "lxml")
+        episodes = {}
+
+        # Same logic as _parse_episodes_from_detail but grouped under "1"
+        for link_elem in soup.select("a[href^='/tdown/']"):
+            href = link_elem.get("href", "")
+            if not href or not href.endswith(".html"):
+                continue
+
+            title = link_elem.get_text(strip=True)
+            if not title or len(title) < 5:
+                continue
+
+            full_url = BASE_URL + href if href.startswith("/") else href
+            res_type = "torrent" if href.endswith(".torrent") else "magnet"
+
+            if "1" not in episodes:
+                episodes["1"] = []
+
+            episodes["1"].append({
+                "title": title,
+                "url": full_url,
+                "type": res_type
+            })
+
+        return episodes
+
     def get_magnet_link(self, tdown_url: str) -> Optional[str]:
         """Get magnet link from a tdown page"""
         try:
