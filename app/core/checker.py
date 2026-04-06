@@ -35,7 +35,22 @@ def _fetch_and_update_subscription(subscription: Subscription, retry_count: int 
                 if not episodes:
                     return False, None, []
 
-                # 提取最新集数和对应链接
+                # 电影类型：只返回是否有资源，latest_episode 为 None
+                if subscription.media_type == 'movie':
+                    latest_links = []
+                    for links in episodes.values():
+                        latest_links.extend(links)
+                    # 电影只要有资源就视为更新
+                    if latest_links:
+                        if subscription.latest_episode != "有资源":
+                            subscription.latest_episode = "有资源"
+                            subscription.latest_update_time = datetime.utcnow()
+                            db.session.commit()
+                            return True, None, latest_links
+                        return False, None, latest_links
+                    return False, None, []
+
+                # TV 类型：提取最新集数和对应链接
                 latest_ep_num = max(int(k) for k in episodes.keys())
                 latest_links = episodes.get(str(latest_ep_num), [])
 
