@@ -15,6 +15,17 @@
     </div>
 </div>
 
+<!-- 手动执行区域 -->
+<div class="mb-4">
+    <div id="fetch-result" class="hidden mb-3 p-4 rounded-lg bg-gray-800 border border-gray-700">
+        <span id="fetch-result-text" class="text-sm"></span>
+    </div>
+    <button id="trigger-fetch-btn" onclick="triggerFetchAll()"
+            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors">
+        手动执行
+    </button>
+</div>
+
 {% if subscriptions %}
 <div class="space-y-4">
     {% for sub in subscriptions %}
