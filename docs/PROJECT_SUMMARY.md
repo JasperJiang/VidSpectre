@@ -51,6 +51,7 @@ vid spectre/
 │           ├── __init__.py
 │           ├── plugin.py    # 插件实现
 │           └── parser.py    # 页面解析
+│       └── manual/         # 手动管理模式插件（不爬取）
 ├── templates/               # HTML模板
 │   ├── base.html
 │   ├── index.html
@@ -263,3 +264,19 @@ uv run python run.py
 - **按钮布局优化**：已看和爬取按钮靠左，更下拉菜单靠右
 - **Bug修复**：修复模板中缺少 subscription-card 闭合标签导致的卡片嵌套问题
 - **相关文件**：`templates/index.html`、`static/js/app.js`
+
+### 23. Manual 手动管理插件
+- **新增插件**：`plugins/sources/manual/` 插件，不执行任何爬取操作
+- **适用场景**：用户手动管理资源链接，不需要自动爬取的订阅
+- **添加订阅页面重构**：爬取插件选择器移到媒体类型下方，默认为 manual
+- **条件显示**：选择 manual 时隐藏搜索区域和 media_id 字段，只显示名称输入框
+- **媒体类型限制**：manual 插件仅支持电视剧（电影不支持手动模式）
+- **订阅列表显示**：所有订阅都显示 source_plugin 标签，manual 订阅显示 ℹ️ 图标提示
+- **功能屏蔽**：manual 订阅不显示最新集数、爬取按钮、展开按钮
+- **爬取跳过**：`_run_all_subscriptions()` 自动跳过 source_plugin='manual' 的订阅
+- **相关文件**：`plugins/sources/manual/plugin.py`、`templates/subscription.html`、`templates/index.html`、`app/core/checker.py`
+
+### 24. 添加订阅页面 Bug 修复
+- **问题**：切换媒体类型时插件选择被自动修改
+- **修复**：`handleMediaTypeChange` 函数不再自动切换插件，保持用户选择
+- **相关文件**：`templates/subscription.html`

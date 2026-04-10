@@ -56,13 +56,17 @@
                     {% else %}
                     <span class="bg-green-600 text-xs px-2 py-0.5 rounded">电视剧</span>
                     {% endif %}
-                    {% if not sub.media_id %}
+                    <span class="bg-gray-600 text-xs px-2 py-0.5 rounded">{{ sub.source_plugin }}</span>
+                    {% if sub.source_plugin == 'manual' %}
+                    <span class="text-gray-400 text-xs" title="手动管理模式，不自动爬取">ℹ️</span>
+                    {% endif %}
+                    {% if not sub.media_id and sub.source_plugin != 'manual' %}
                     <span class="text-yellow-400 text-xs" title="资源未找到，请在添加订阅时搜索并选择正确的资源">⚠</span>
                     {% endif %}
                 </div>
                 <h3 class="text-lg font-medium truncate">{{ sub.media_name }}</h3>
             </div>
-            {% if sub.media_id %}
+            {% if sub.media_id and sub.source_plugin != 'manual' %}
             <button class="toggle-episodes ml-2 text-sm text-blue-400 hover:text-blue-300"
                     data-sub-id="{{ sub.id }}"
                     data-media-id="{{ sub.media_id }}"
@@ -86,6 +90,7 @@
                            data-sub-id="{{ sub.id }}">
                 </div>
                 {% endif %}
+                {% if sub.source_plugin != 'manual' %}
                 <div>
                     <span class="text-gray-500">关键字:</span>
                     <input type="text"
@@ -94,6 +99,8 @@
                            placeholder="关键字"
                            data-sub-id="{{ sub.id }}">
                 </div>
+                {% endif %}
+                {% if sub.source_plugin != 'manual' %}
                 {% if sub.media_type == 'tv' %}
                 <div>
                     <span class="text-gray-500">最新:</span>
@@ -104,6 +111,7 @@
                     <span class="text-gray-500">资源:</span>
                     <span class="latest-episode">{{ sub.latest_episode or '无' }}</span>
                 </div>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -117,10 +125,12 @@
                     ✓ 已看
                 </button>
                 {% endif %}
+                {% if sub.source_plugin != 'manual' %}
                 <button class="fetch-btn bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
                         data-sub-id="{{ sub.id }}">
                     🔄 爬取
                 </button>
+                {% endif %}
             </div>
             <div class="relative">
                 <button class="more-menu-btn bg-gray-600 hover:bg-gray-500 text-white px-3 py-2 rounded-lg">

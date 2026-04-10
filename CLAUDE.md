@@ -24,7 +24,8 @@ The app runs on port 5002 by default. If port 5002 is in use (common with AirPla
 VidSpectre uses a plugin architecture for data sources. Plugins are loaded from `plugins/sources/`:
 - Plugins implement `DataSourcePlugin` interface (see `plugins/interfaces.py`)
 - The `plugins/registry.py` maintains a registry of loaded plugins
-- Currently implemented: `btbtla` plugin for btbtla.com
+- Currently implemented: `btbtla` plugin for btbtla.com, `manual` plugin for manual management
+- **manual plugin**: No crawling, suitable for subscriptions users manage manually. Only supports TV type. Skipped during fetch operations.
 
 ### Scheduler
 - APScheduler runs on a global cron schedule defined by `DEFAULT_INTERVAL_CRON` in `config.py`
@@ -79,8 +80,9 @@ The app uses Flask's application factory pattern in `app/__init__.py`:
 
 ### media_id is Critical
 - The `Subscription.media_id` field MUST be set for both episode listing (TV) and resource listing (movies) to work
-- If `media_id` is `None`, the "展开" button will show a ⚠ warning
+- If `media_id` is `None` (except for manual plugin), the "展开" button will show a ⚠ warning
 - When adding subscriptions via search, ensure `media_id` is properly saved
+- **Exception**: manual plugin subscriptions don't need media_id and don't show the ⚠ warning
 
 ### Template Files
 Templates are in `../templates` (project root):

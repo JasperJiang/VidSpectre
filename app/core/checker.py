@@ -81,6 +81,9 @@ def _run_all_subscriptions():
     subscriptions = Subscription.query.filter_by(status='active').all()
 
     for sub in subscriptions:
+        # 跳过 manual 插件的订阅（手动管理模式，不自动爬取）
+        if sub.source_plugin == 'manual':
+            continue
         try:
             updated, latest, links = _fetch_and_update_subscription(sub)
             results.append({
